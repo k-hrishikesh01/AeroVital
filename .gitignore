@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# Android build artifacts
+.gradle/
