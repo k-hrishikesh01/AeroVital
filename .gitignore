@@ -223,3 +223,18 @@ __marimo__/
 
 # Android build artifacts
 .gradle/
+
+# Node / JavaScript dependencies
+node_modules/
+**/node_modules/
+
+# Visual Studio Code
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Machine-specific / local configurations
+**/local.properties
+*.local
