@@ -71,9 +71,19 @@ class PipelineSessionManager:
                     pipeline.set_baseline(active_baseline.to_core())
 
             # Hydrate recent window samples from DB if buffer is empty
-            if mission:
+            target_mission = mission
+            target_pilot = pilot or (mission.pilot if mission else None)
+            
+            qs = None
+            if target_mission:
+                qs = Telemetry.objects.filter(mission=target_mission)
+            elif target_pilot:
+                qs = Telemetry.objects.filter(pilot=target_pilot, mission__isnull=True)
+            elif key == "default":
+                qs = Telemetry.objects.filter(mission__isnull=True, pilot__isnull=True)
+
+            if qs is not None:
                 buffer_limit = max(50, int(pipeline.window_buffer.config.window_duration_sec * 2))
-                qs = Telemetry.objects.filter(mission=mission)
                 if before_timestamp:
                     qs = qs.filter(timestamp__lt=before_timestamp)
                 recent_qs = qs.order_by("-timestamp")[:buffer_limit]
@@ -236,7 +246,20 @@ def ingest_telemetry_sample(
     if mission and not pilot and mission.pilot:
         pilot = mission.pilot
 
-    # 2. Persist raw Telemetry record
+    # 2. Obtain pipeline session and verify temporal ordering
+    pipeline = pipeline_manager.get_pipeline(
+        mission=mission,
+        pilot=pilot,
+        before_timestamp=core_sample.timestamp,
+    )
+
+    if pipeline._last_sample_timestamp is not None:
+        if core_sample.timestamp <= pipeline._last_sample_timestamp:
+            raise ValidationError({
+                "timestamp": f"Timestamp {core_sample.timestamp} must be strictly greater than previous sample timestamp {pipeline._last_sample_timestamp}."
+            })
+
+    # 3. Persist raw Telemetry record
     telemetry_record = Telemetry.objects.create(
         pilot=pilot,
         device=device,
@@ -259,14 +282,8 @@ def ingest_telemetry_sample(
         device.last_seen_at = timezone.now()
         device.save(update_fields=["last_seen_at"])
 
-    # 3. Obtain pipeline session and process sample
-    pipeline = pipeline_manager.get_pipeline(
-        mission=mission,
-        pilot=pilot,
-        before_timestamp=core_sample.timestamp,
-    )
+    # 4. Process sample through verified Core pipeline
     context = build_operational_context(mission, core_sample.timestamp)
-
     result: Optional[FatigueEstimationResult] = pipeline.process_sample(core_sample, context=context)
 
     estimate_record: Optional[StateEstimate] = None

@@ -59,3 +59,33 @@ class PilotModelAndAPITestCase(TestCase):
         patch_res = self.client.patch(f"/api/v1/pilots/{pilot_id}/", {"age": 35})
         self.assertEqual(patch_res.status_code, status.HTTP_200_OK)
         self.assertEqual(patch_res.data["age"], 35)
+
+    def test_pilot_cannot_access_other_pilot_profile(self):
+        user_a = User.objects.create_user(username="pilota", password="password123")
+        pilot_a = Pilot.objects.create(
+            user=user_a,
+            pilot_code="PILOT-A",
+            name="Pilot Alpha",
+            age=28,
+            sex="M",
+        )
+
+        user_b = User.objects.create_user(username="pilotb", password="password123")
+        pilot_b = Pilot.objects.create(
+            user=user_b,
+            pilot_code="PILOT-B",
+            name="Pilot Bravo",
+            age=32,
+            sex="F",
+        )
+
+        client_a = APIClient()
+        client_a.force_authenticate(user=user_a)
+
+        # Pilot A accessing own profile -> OK
+        res_own = client_a.get(f"/api/v1/pilots/{pilot_a.id}/")
+        self.assertEqual(res_own.status_code, status.HTTP_200_OK)
+
+        # Pilot A attempting to access Pilot B's profile -> 403 Forbidden
+        res_other = client_a.get(f"/api/v1/pilots/{pilot_b.id}/")
+        self.assertEqual(res_other.status_code, status.HTTP_403_FORBIDDEN)

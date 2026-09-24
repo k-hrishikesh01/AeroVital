@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,6 +11,7 @@ from .serializers import (
 )
 from .services import ingest_telemetry_sample, evaluate_batch_window_samples
 from intelligence.serializers import StateEstimateSerializer
+from pilots.permissions import enforce_pilot_scoping, get_user_pilot
 
 
 class TelemetryIngestAndListView(APIView):
@@ -17,15 +19,13 @@ class TelemetryIngestAndListView(APIView):
 
     def get(self, request):
         qs = Telemetry.objects.all().order_by("-timestamp")
+        qs = enforce_pilot_scoping(request, qs, pilot_field="pilot")
         mission_id = request.query_params.get("mission")
         if mission_id:
             qs = qs.filter(mission_id=mission_id)
         device_id = request.query_params.get("device")
         if device_id:
             qs = qs.filter(device_id=device_id)
-        pilot_id = request.query_params.get("pilot")
-        if pilot_id:
-            qs = qs.filter(pilot_id=pilot_id)
 
         limit = min(int(request.query_params.get("limit", 100)), 500)
         serializer = TelemetrySerializer(qs[:limit], many=True)
@@ -33,9 +33,11 @@ class TelemetryIngestAndListView(APIView):
 
     def post(self, request):
         # Resolve pilot or device from authenticated user if available
-        pilot = None
-        if hasattr(request.user, "pilot_profile"):
-            pilot = request.user.pilot_profile
+        pilot = get_user_pilot(request.user)
+        if pilot is not None and not (request.user.is_staff or request.user.is_superuser):
+            requested_pilot = request.data.get("pilot")
+            if requested_pilot and str(requested_pilot) != str(pilot.id):
+                raise PermissionDenied("Cannot ingest telemetry for another pilot.")
 
         result = ingest_telemetry_sample(
             data=request.data,
@@ -69,9 +71,11 @@ class TelemetryBatchIngestView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        pilot = None
-        if hasattr(request.user, "pilot_profile"):
-            pilot = request.user.pilot_profile
+        pilot = get_user_pilot(request.user)
+        if pilot is not None and not (request.user.is_staff or request.user.is_superuser):
+            requested_pilot = request.data.get("pilot")
+            if requested_pilot and str(requested_pilot) != str(pilot.id):
+                raise PermissionDenied("Cannot ingest telemetry for another pilot.")
 
         result = evaluate_batch_window_samples(
             samples_data=samples_data,
@@ -92,6 +96,7 @@ class SignalQualityListView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = SignalQuality.objects.all().order_by("-timestamp")
+        qs = enforce_pilot_scoping(self.request, qs, pilot_field="pilot")
         mission_id = self.request.query_params.get("mission")
         if mission_id:
             qs = qs.filter(mission_id=mission_id)
@@ -104,6 +109,7 @@ class FeatureWindowListView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = FeatureWindow.objects.all().order_by("-window_end")
+        qs = enforce_pilot_scoping(self.request, qs, pilot_field="pilot")
         mission_id = self.request.query_params.get("mission")
         if mission_id:
             qs = qs.filter(mission_id=mission_id)

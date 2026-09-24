@@ -380,3 +380,102 @@ class TelemetryCoreIntegrationTestCase(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(res.data), 1)
 
+    def test_first_sample_returns_accumulating(self):
+        """First sample should return accumulating status and no state estimate yet."""
+        res = self.client.post(self.url, {
+            "mission": str(self.mission.id),
+            "pilot": str(self.pilot.id),
+            "timestamp": "2026-09-24T20:00:00Z",
+            "heart_rate": 72.0,
+            "rr_interval": 833.3,
+        }, format="json")
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["status"], "accumulating")
+        self.assertIsNone(res.data["estimate"])
+
+    def test_out_of_order_timestamp_rejected(self):
+        """Out of order or duplicate timestamps must be rejected with 400 Bad Request."""
+        res1 = self.client.post(self.url, {
+            "mission": str(self.mission.id),
+            "pilot": str(self.pilot.id),
+            "timestamp": "2026-09-24T20:05:00Z",
+            "heart_rate": 72.0,
+            "rr_interval": 833.3,
+        }, format="json")
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+
+        # Send earlier timestamp
+        res2 = self.client.post(self.url, {
+            "mission": str(self.mission.id),
+            "pilot": str(self.pilot.id),
+            "timestamp": "2026-09-24T20:04:00Z",
+            "heart_rate": 74.0,
+            "rr_interval": 810.0,
+        }, format="json")
+        self.assertEqual(res2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("timestamp", res2.data)
+
+    def test_pilot_cannot_access_other_pilot_telemetry_or_state(self):
+        """Object-level authorization: Pilot Alpha cannot query Pilot Bravo's private data."""
+        user_alpha = User.objects.create_user(username="user_alpha", password="password123")
+        pilot_alpha = Pilot.objects.create(
+            user=user_alpha,
+            pilot_code="PILOT-ALPHA",
+            name="Alpha Pilot",
+            age=29,
+            sex="M",
+        )
+
+        user_bravo = User.objects.create_user(username="user_bravo", password="password123")
+        pilot_bravo = Pilot.objects.create(
+            user=user_bravo,
+            pilot_code="PILOT-BRAVO",
+            name="Bravo Pilot",
+            age=31,
+            sex="F",
+        )
+
+        # Create private records for Bravo
+        now = timezone.now()
+        Telemetry.objects.create(
+            pilot=pilot_bravo,
+            timestamp=now,
+            heart_rate=75.0,
+        )
+        StateEstimate.objects.create(
+            pilot=pilot_bravo,
+            timestamp=now,
+            fatigue_state="NORMAL",
+            confidence=0.90,
+            overall_sqi=1.0,
+        )
+
+        # Authenticate as Alpha
+        client_alpha = APIClient()
+        client_alpha.force_authenticate(user=user_alpha)
+
+        # 1. Alpha queries telemetry without params -> gets 0 records (only alpha's records returned)
+        res_telemetry = client_alpha.get("/api/v1/telemetry/")
+        self.assertEqual(res_telemetry.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_telemetry.data), 0)
+
+        # 2. Alpha explicitly attempts to query Bravo's telemetry -> 403 Forbidden
+        res_telemetry_bravo = client_alpha.get(f"/api/v1/telemetry/?pilot={pilot_bravo.id}")
+        self.assertEqual(res_telemetry_bravo.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Alpha explicitly attempts to query Bravo's state estimates -> 403 Forbidden
+        res_estimates_bravo = client_alpha.get(f"/api/v1/intelligence/estimates/?pilot={pilot_bravo.id}")
+        self.assertEqual(res_estimates_bravo.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 4. Alpha attempts to view Bravo's dashboard current state -> 403 Forbidden
+        res_curr_state = client_alpha.get(f"/api/v1/intelligence/current-state/?pilot={pilot_bravo.id}")
+        self.assertEqual(res_curr_state.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 5. Alpha attempts to ingest telemetry spoofing Bravo's pilot ID -> 403 Forbidden
+        res_ingest_spoof = client_alpha.post("/api/v1/telemetry/", {
+            "pilot": str(pilot_bravo.id),
+            "timestamp": "2026-09-24T20:10:00Z",
+            "heart_rate": 75.0,
+        }, format="json")
+        self.assertEqual(res_ingest_spoof.status_code, status.HTTP_403_FORBIDDEN)
+

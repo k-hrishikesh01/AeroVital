@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -11,6 +12,7 @@ from .serializers import (
 )
 from missions.models import Mission
 from telemetry.models import Telemetry, SignalQuality
+from pilots.permissions import enforce_pilot_scoping, IsStaffOrPilotOwner, get_user_pilot
 
 
 class StateEstimateListView(generics.ListAPIView):
@@ -19,12 +21,10 @@ class StateEstimateListView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = StateEstimate.objects.all().order_by("-timestamp")
+        qs = enforce_pilot_scoping(self.request, qs, pilot_field="pilot")
         mission_id = self.request.query_params.get("mission")
         if mission_id:
             qs = qs.filter(mission_id=mission_id)
-        pilot_id = self.request.query_params.get("pilot")
-        if pilot_id:
-            qs = qs.filter(pilot_id=pilot_id)
         fatigue_state = self.request.query_params.get("fatigue_state")
         if fatigue_state:
             qs = qs.filter(fatigue_state=fatigue_state.upper())
@@ -39,6 +39,12 @@ class CurrentStateView(APIView):
     def get(self, request):
         mission_id = request.query_params.get("mission")
         pilot_id = request.query_params.get("pilot")
+
+        user_pilot = get_user_pilot(request.user)
+        if user_pilot is not None and not (request.user.is_staff or request.user.is_superuser):
+            if pilot_id and str(pilot_id) != str(user_pilot.id):
+                raise PermissionDenied("You do not have permission to view another pilot's current state.")
+            pilot_id = str(user_pilot.id)
 
         qs = StateEstimate.objects.all().order_by("-timestamp")
         if mission_id:
@@ -106,16 +112,21 @@ class BaselineListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = Baseline.objects.all().order_by("-created_at")
-        pilot_id = self.request.query_params.get("pilot")
-        if pilot_id:
-            qs = qs.filter(pilot_id=pilot_id)
+        qs = enforce_pilot_scoping(self.request, qs, pilot_field="pilot")
         return qs
+
+    def perform_create(self, serializer):
+        user_pilot = get_user_pilot(self.request.user)
+        if user_pilot is not None and not (self.request.user.is_staff or self.request.user.is_superuser):
+            serializer.save(pilot=user_pilot)
+        else:
+            serializer.save()
 
 
 class BaselineDetailView(generics.RetrieveUpdateAPIView):
     queryset = Baseline.objects.all()
     serializer_class = BaselineSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsStaffOrPilotOwner]
 
 
 class ModelVersionListView(generics.ListAPIView):
