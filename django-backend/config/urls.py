@@ -1,25 +1,30 @@
 """
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+URL configuration for AeroVital project.
 """
+
 from django.contrib import admin
 from django.urls import include, path
 
+# Versioned API routes under /api/v1/
+v1_patterns = [
+    path("auth/", include("pilots.auth_urls")),
+    path("pilots/", include("pilots.urls")),
+    path("devices/", include("devices.urls")),
+    path("missions/", include("missions.urls")),
+    path("telemetry/", include("telemetry.urls")),
+    path("intelligence/", include("intelligence.urls")),
+    path("alerts/", include("alerts.urls")),
+]
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("alerts.urls")),
-    path("api/", include("telemetry.urls")),
-    path("api/", include("intelligence.urls")),
+    path("api/v1/", include((v1_patterns, "v1"))),
+
+    # Top-level backward compatibility routes
+    path("api/telemetry/", include("telemetry.urls")),
+    path("api/intelligence/", include("intelligence.urls")),
+    path("api/alerts/", include("alerts.urls")),
+    path("api/missions/", include("missions.urls")),
+    path("api/pilots/", include("pilots.urls")),
+    path("api/devices/", include("devices.urls")),
 ]
