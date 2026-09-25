@@ -141,7 +141,7 @@ export const api = {
       const params = new URLSearchParams();
       if (missionId) params.append('mission', missionId);
       const query = params.toString() ? `?${params.toString()}` : '';
-      return request(`/api/v1/telemetry/quality/${query}`);
+      return request(`/api/v1/telemetry/signal-quality/${query}`);
     },
 
     async getFeatures({ missionId } = {}) {
