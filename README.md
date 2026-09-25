@@ -208,8 +208,8 @@ The frontend is a mission-control web application built with **React 18** and **
 Ensure PostgreSQL is active and initialize the database:
 ```bash
 # Create database and user (if not already existing)
-psql -U postgres -c "CREATE USER aerovital_user WITH PASSWORD 'aerovital_password';"
-psql -U postgres -c "CREATE DATABASE aerovital OWNER aerovital_user;"
+psql -U postgres -c "CREATE USER <POSTGRES_USER> WITH PASSWORD '<POSTGRES_PASSWORD>';"
+psql -U postgres -c "CREATE DATABASE aerovital OWNER <POSTGRES_USER>;"
 ```
 
 ### 2. Backend Setup
