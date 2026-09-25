@@ -238,3 +238,26 @@ Thumbs.db
 # Machine-specific / local configurations
 **/local.properties
 *.local
+
+# Environment variables & secrets
+.env.*
+!.env.example
+*.key
+*.pem
+*.cert
+*.crt
+
+# PostgreSQL & Local Database storage
+postgres_data/
+**/postgres_data/
+*.sqlite3
+*.sqlite3-journal
+
+# Web & Build artifacts
+dist/
+web/dist/
+
+# Antigravity & Agent scratch directories
+.gemini/
+.antigravity/
+scratch/

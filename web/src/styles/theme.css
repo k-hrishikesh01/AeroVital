@@ -1,0 +1,113 @@
+/* ==========================================================================
+   AEROVITAL - Design System & Theme Engine
+   Tokens, Typography, and Base Resets
+   ========================================================================== */
+
+:root {
+  /* Light Theme (AeroVital Clean Aviation Palette) */
+  --bg-app: #F4F5F9;
+  --bg-card: #FFFFFF;
+  --bg-card-tinted: #ECEEF4;
+  --bg-card-hover: #E6E9F0;
+  
+  --primary-navy: #19375F;
+  --primary-navy-hover: #122949;
+  --primary-navy-active: #0c1d35;
+  --primary-navy-tint: rgba(25, 55, 95, 0.08);
+
+  --text-primary: #0F172A;
+  --text-secondary: #5A6678;
+  --text-muted: #8C97A5;
+  --text-inverted: #FFFFFF;
+
+  --border-light: rgba(226, 232, 240, 0.85);
+  --border-input: #64748B;
+  --border-card-tint: rgba(0, 0, 0, 0.04);
+
+  --color-normal: #10B981;
+  --color-normal-bg: rgba(16, 185, 129, 0.12);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-alert: #EF4444;
+  --color-alert-bg: rgba(239, 68, 68, 0.12);
+  --color-cyan: #0EA5E9;
+  --color-purple: #8B5CF6;
+  --color-insufficient: #94A3B8;
+  --color-insufficient-bg: rgba(148, 163, 184, 0.14);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  --shadow-lg: 0 14px 34px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cockpit Night Vision / Dark HUD Theme */
+body.dark-theme {
+  --bg-app: #0A0F1D;
+  --bg-card: #111A2E;
+  --bg-card-tinted: #18233C;
+  --bg-card-hover: #1F2E4D;
+
+  --primary-navy: #2B6CB0;
+  --primary-navy-hover: #3182CE;
+  --primary-navy-active: #4299E1;
+  --primary-navy-tint: rgba(43, 108, 176, 0.2);
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverted: #0F172A;
+
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-input: #475569;
+  --border-card-tint: rgba(255, 255, 255, 0.04);
+
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 14px 34px -4px rgba(0, 0, 0, 0.6);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: var(--radius-full);
+}
+
+.mono-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
