@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -30,22 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 fun LoginScreen(
     onLogin: (String, String) -> Unit,
     onForgotPassword: () -> Unit,
-    onCreateAccount: () -> Unit
+    onCreateAccount: () -> Unit,
+    isLoading: Boolean = false,
+    errorMessage: String? = null
 ) {
-
-    var pilotId by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var password by rememberSaveable {
-        mutableStateOf("")
-    }
-
+    var pilotId by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -56,197 +52,132 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(
-            modifier = Modifier.height(60.dp)
-        )
-
+        Spacer(modifier = Modifier.height(60.dp))
 
         Text(
             text = "Aero Vital",
             style = MaterialTheme.typography.headlineLarge
         )
 
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Pilot Health & Performance Monitoring",
             style = MaterialTheme.typography.bodyMedium
         )
 
-
-        Spacer(
-            modifier = Modifier.height(50.dp)
-        )
-
+        Spacer(modifier = Modifier.height(50.dp))
 
         Text(
             text = "Pilot Login",
             style = MaterialTheme.typography.headlineMedium
         )
 
+        Spacer(modifier = Modifier.height(28.dp))
 
-        Spacer(
-            modifier = Modifier.height(28.dp)
-        )
-
+        if (!errorMessage.isNullOrBlank()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        }
 
         /*
          * PILOT ID
          */
-
         OutlinedTextField(
             value = pilotId,
-
-            onValueChange = {
-                pilotId = it
-            },
-
+            onValueChange = { pilotId = it },
             modifier = Modifier.fillMaxWidth(),
-
             singleLine = true,
-
-            label = {
-                Text("Pilot ID")
-            },
-
-            placeholder = {
-                Text("Enter Pilot ID")
-            },
-
-            shape = RoundedCornerShape(12.dp)
+            label = { Text("Pilot ID") },
+            placeholder = { Text("Enter Pilot ID (e.g. AVP-2026-001)") },
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         )
 
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
+        Spacer(modifier = Modifier.height(16.dp))
 
         /*
          * PASSWORD
          */
-
         OutlinedTextField(
             value = password,
-
-            onValueChange = {
-                password = it
-            },
-
+            onValueChange = { password = it },
             modifier = Modifier.fillMaxWidth(),
-
             singleLine = true,
-
-            label = {
-                Text("Password")
-            },
-
-            placeholder = {
-                Text("Enter Password")
-            },
-
+            label = { Text("Password") },
+            placeholder = { Text("Enter Password") },
             leadingIcon = {
-
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = "Password"
                 )
             },
-
-            visualTransformation =
-                PasswordVisualTransformation(),
-
-            shape = RoundedCornerShape(12.dp)
+            visualTransformation = PasswordVisualTransformation(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         )
 
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
+        Spacer(modifier = Modifier.height(8.dp))
 
         /*
          * FORGOT PASSWORD
          */
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-
             TextButton(
-                onClick = onForgotPassword
+                onClick = onForgotPassword,
+                enabled = !isLoading
             ) {
-
-                Text(
-                    text = "Forgot Password?"
-                )
+                Text(text = "Forgot Password?")
             }
         }
 
-
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
-
+        Spacer(modifier = Modifier.height(10.dp))
 
         /*
          * LOGIN BUTTON
          */
-
         Button(
-            onClick = {
-                onLogin(
-                    pilotId,
-                    password
-                )
-            },
-
+            onClick = { onLogin(pilotId, password) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-
             shape = RoundedCornerShape(12.dp),
-
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            enabled = !isLoading
         ) {
-
-            Text(
-                text = "LOGIN"
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text(text = "LOGIN")
+            }
         }
 
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-
+        Spacer(modifier = Modifier.height(20.dp))
 
         /*
          * CREATE ACCOUNT
          */
-
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Text(
-                text = "Don't have an account?"
-            )
-
+            Text(text = "Don't have an account?")
             TextButton(
-                onClick = onCreateAccount
+                onClick = onCreateAccount,
+                enabled = !isLoading
             ) {
-
-                Text(
-                    text = "Create Account"
-                )
+                Text(text = "Create Account")
             }
         }
     }
