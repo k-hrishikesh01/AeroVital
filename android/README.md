@@ -18,14 +18,14 @@ This directory contains the AeroVital wearable telemetry client and phone compan
 
 ```
 Galaxy Watch (Wear OS)
-   ├── Samsung Privileged Health SDK (PPG, ECG, SpO2, Accelerometer)
+   ├── Sensor Acquisition / Adapter Layer
    ├── Local Sensor Sampling & Monotonic Buffering
    └── Wear Transport Layer (Play Services)
          ↓
 Android Companion Phone
    ├── Wear Transport Receiver
    ├── Pilot Authentication (Token Auth)
-   ├── Store-and-Forward Offline Cache (Room DB)
+   ├── Store-and-Forward Offline Buffer
    └── HTTPS REST Ingestion Adapter
          ↓
 Django REST API (`/api/v1/telemetry/`)
@@ -35,7 +35,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Current Implementation State
 
-**IMPLEMENTED (A1 & A2):**
+**IMPLEMENTED (A1, A2, A3):**
 - [x] Initial Android Studio / Gradle Kotlin DSL build configuration (`build.gradle.kts`, `settings.gradle.kts`)
 - [x] Django REST Authentication (Token-based) integration on Phone
 - [x] Secure Android Keystore-backed credential storage
@@ -43,11 +43,15 @@ Django REST API (`/api/v1/telemetry/`)
 - [x] Transport Envelope schema (versioned, uniquely identified, timestamped JSON)
 - [x] Envelope validation, error handling, duplicate filtering, and staleness detection
 - [x] Unit test suites for authentication and transport boundaries
+- [x] Wear OS Sensor Acquisition Layer (A3)
+    - Normalized sensor observations
+    - Android SensorManager API integration
+    - Heart Rate, Accelerometer, Gyroscope adapters
+    - Explicitly unavailable channels representation (SpO2, Skin Temp, RR Interval)
 
 **NOT YET IMPLEMENTED:**
-- [ ] Real Samsung sensor acquisition (PPG, SpO2, HR, etc.)
-- [ ] Physiological sensor adapters
-- [ ] Offline store-and-forward (Room DB)
+- [ ] Additional platform/vendor health APIs, if required after physical hardware capability verification
+- [ ] Offline store-and-forward buffering
 - [ ] Django telemetry ingestion (Watch → Phone → Django)
 - [ ] Real-time operational context tagging (G-load, flight phase)
 - [ ] Operational contexts synchronization
@@ -57,6 +61,42 @@ Django REST API (`/api/v1/telemetry/`)
 ## Technical Boundaries
 
 - **A2 establishes WATCH → PHONE transport only.** Real sensor acquisition and WATCH → PHONE → DJANGO telemetry ingestion are not yet implemented.
-- **Fatigue Inference:** The Android application acts strictly as a data transport layer. Fatigue estimation is performed strictly upstream by the AeroVital Core.
+- **Fatigue Inference:** The Android application handles sensor acquisition and data transport only. Fatigue estimation is performed strictly upstream by the AeroVital Core.
 - **Database:** No direct PostgreSQL access is permitted from Android. The Django backend API serves as the sole system of record.
 - **Firebase:** Strictly excluded by design requirements.
+
+---
+
+## Sensor Layer Details (A3)
+
+**Sensors Investigated:**
+Heart Rate, Accelerometer, Gyroscope, RR Interval, SpO2, Skin Temperature.
+
+**APIs Actually Used:**
+Standard Android `SensorManager`. Third-party dependencies (like `androidx.health.services`) have intentionally been avoided at this stage to establish a clean compatibility baseline.
+
+**Permissions Required:**
+`android.permission.BODY_SENSORS`
+
+**Channels Available Through Implemented Application:**
+- `SensorType.HEART_RATE` (bpm)
+- `SensorType.ACCELEROMETER` (m/s²)
+- `SensorType.GYROSCOPE` (rad/s)
+
+**Channels Unavailable Through Implemented Application:**
+- `SensorType.RR_INTERVAL`
+- `SensorType.SPO2`
+- `SensorType.SKIN_TEMPERATURE`
+*(Represented explicitly as `UNAVAILABLE` rather than fabricating values, as these channels are not exposed through the standard SensorManager acquisition layer.)*
+
+**Timestamp Behavior:**
+Preserves original hardware nanosecond timestamps (`SensorEvent.timestamp`) indicating uptime since boot.
+
+**Sampling Behavior:**
+Uses `SENSOR_DELAY_NORMAL`. No manual imputation, interpolation, or smoothing is performed by the adapters.
+
+**Lifecycle Behavior:**
+Adapters implement explicit `start()` and `stop()` mechanisms, cleaning up listeners immediately to prevent memory/battery leaks.
+
+**Known Galaxy Watch Capability Limitations:**
+Physical Galaxy Watch capability verification is still pending. The current implementation exposes only the channels available through the implemented `SensorManager` acquisition layer: heart rate, accelerometer, and gyroscope. RR interval, SpO2, and skin temperature are currently unavailable through this implementation. Additional platform/vendor APIs may be evaluated later if required by verified hardware capabilities.
