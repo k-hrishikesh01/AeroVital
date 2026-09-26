@@ -23,4 +23,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AeroVital"
-include(":app")
+include(":wear")
+include(":phone")
