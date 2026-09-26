@@ -1,4 +1,10 @@
 [versions]
+mockwebserver = "4.12.0"
+coroutines = "1.8.1"
+junit = "4.13.2"
+retrofit = "2.11.0"
+okhttp = "4.12.0"
+viewModel = "2.8.2"
 material3 = "1.3.1"
 agp = "9.4.1"
 playServicesWearable = "18.0.0"
@@ -12,6 +18,13 @@ activityCompose = "1.8.0"
 coreSplashscreen = "1.2.0"
 
 [libraries]
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "viewModel" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
