@@ -1,7 +1,7 @@
 package com.aerovital.phone.data.remote
 
-interface TokenManager {
+interface TokenManager : TokenProvider {
     fun saveToken(token: String)
-    fun getToken(): String?
+    override fun getToken(): String?
     fun clearToken()
 }

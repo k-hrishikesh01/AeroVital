@@ -1,8 +1,10 @@
+import json
 from datetime import datetime, timedelta, timezone as dt_timezone
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from pilots.models import Pilot
@@ -478,4 +480,94 @@ class TelemetryCoreIntegrationTestCase(TestCase):
             "heart_rate": 75.0,
         }, format="json")
         self.assertEqual(res_ingest_spoof.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_a5_phone_wear_transport_ingestion_end_to_end(self):
+        """Milestone A5 End-to-End Verification:
+        Galaxy Watch (SensorObservation -> CanonicalTelemetry -> TransportEnvelope)
+            ↓
+        Phone WearTransportReceiver extraction
+            ↓
+        Authenticated HTTP POST /api/v1/telemetry/ with Authorization: Token <token>
+            ↓
+        Django REST API ingestion and backend persistence.
+        """
+        # Link pilot to user
+        self.pilot.user = self.user
+        self.pilot.save()
+
+        # Generate auth token for pilot user
+        token, _ = Token.objects.get_or_create(user=self.user)
+
+        # 1. Galaxy Watch A4 CanonicalTelemetry
+        canonical_telemetry = {
+            "timestamp": "2026-09-24T10:05:00.000Z",
+            "heart_rate": 78.5,
+            "spo2": 98.0,
+            "accel_x": 0.05,
+            "accel_y": 0.12,
+            "accel_z": 9.79,
+            "raw_payload": {
+                "device_vendor": "GalaxyWatch",
+                "sensor_id": "ppg_bio_01",
+                "gyro_x": 0.02
+            }
+        }
+
+        # 2. A2 TransportEnvelope (produced by CanonicalTelemetry.toTransportEnvelope)
+        now_ms = int(timezone.now().timestamp() * 1000)
+        envelope = {
+            "version": 1,
+            "messageId": "a5-msg-integration-test-01",
+            "deviceId": self.device.device_uid,
+            "timestamp": now_ms,
+            "payloadType": "PHYSIOLOGICAL_TELEMETRY",
+            "payload": json.dumps(canonical_telemetry),
+            "sequenceNumber": 1
+        }
+        envelope_json = json.dumps(envelope)
+
+        # 3. Phone WearTransportReceiver simulation:
+        # - Validates envelope structure and payloadType
+        parsed_envelope = json.loads(envelope_json)
+        self.assertEqual(parsed_envelope["version"], 1)
+        self.assertEqual(parsed_envelope["payloadType"], "PHYSIOLOGICAL_TELEMETRY")
+
+        # - Extracts CanonicalTelemetry
+        extracted_telemetry = json.loads(parsed_envelope["payload"])
+        self.assertEqual(extracted_telemetry["heart_rate"], 78.5)
+
+        # 4. A5 Authenticated HTTP client sends POST /api/v1/telemetry/
+        unauth_client = APIClient()
+        # Verify unauthenticated request fails with 401
+        res_unauth = unauth_client.post(
+            "/api/v1/telemetry/",
+            extracted_telemetry,
+            format="json"
+        )
+        self.assertEqual(res_unauth.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Perform authenticated request with Authorization: Token <token>
+        auth_client = APIClient()
+        auth_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        res_auth = auth_client.post(
+            "/api/v1/telemetry/",
+            extracted_telemetry,
+            format="json"
+        )
+        self.assertEqual(res_auth.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_auth.data["status"], "accumulating")
+        self.assertIsNotNone(res_auth.data["telemetry"])
+
+        # 5. Verify backend database record
+        record = Telemetry.objects.filter(heart_rate=78.5).first()
+        self.assertIsNotNone(record)
+        self.assertEqual(record.pilot, self.pilot)
+        self.assertEqual(record.spo2, 98.0)
+        self.assertEqual(record.accel_z, 9.79)
+        self.assertEqual(record.raw_payload["device_vendor"], "GalaxyWatch")
+        self.assertEqual(record.raw_payload["gyro_x"], 0.02)
+        # Unobserved channels must be None
+        self.assertIsNone(record.skin_temperature)
+        self.assertIsNone(record.rr_interval)
+        self.assertIsNone(record.steps)
 

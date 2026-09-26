@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
+import com.aerovital.phone.telemetry.PhoneTelemetryIngestionHandler
+
 class WearTransportReceiver : WearableListenerService() {
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -38,6 +40,7 @@ class WearTransportReceiver : WearableListenerService() {
                     Log.d(TAG, "Received valid envelope: ${result.data.messageId}")
                 }
                 _envelopeFlow.emit(result.data)
+                telemetryHandler?.handleEnvelope(result.data)
             }
             is TransportResult.Error -> {
                 if (BuildConfig.DEBUG) {
@@ -77,5 +80,10 @@ class WearTransportReceiver : WearableListenerService() {
 
         private val _envelopeFlow = MutableSharedFlow<TransportEnvelope>()
         val envelopeFlow: SharedFlow<TransportEnvelope> = _envelopeFlow
+
+        /**
+         * Optional telemetry ingestion handler for forwarding valid envelopes to Django backend.
+         */
+        var telemetryHandler: PhoneTelemetryIngestionHandler? = null
     }
 }

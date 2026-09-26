@@ -59,4 +59,14 @@ object ApiClient {
     fun getAuthApi(context: Context, onUnauthorized: () -> Unit): AuthApi {
         return getRetrofit(context, onUnauthorized).create(AuthApi::class.java)
     }
+
+    fun getTelemetryApi(context: Context, onUnauthorized: () -> Unit = {}): TelemetryApi {
+        return getRetrofit(context, onUnauthorized).create(TelemetryApi::class.java)
+    }
+
+    fun getTelemetryClient(context: Context, onUnauthorized: () -> Unit = {}): DjangoTelemetryClient {
+        val tokenManager = SecureTokenManager(context)
+        val api = getTelemetryApi(context, onUnauthorized)
+        return DjangoTelemetryClient(api, tokenManager)
+    }
 }

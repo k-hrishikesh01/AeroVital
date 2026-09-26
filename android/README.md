@@ -35,7 +35,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Current Implementation State
 
-**IMPLEMENTED (A1, A2, A3, A4):**
+**IMPLEMENTED (A1, A2, A3, A4, A5):**
 - [x] Initial Android Studio / Gradle Kotlin DSL build configuration (`build.gradle.kts`, `settings.gradle.kts`)
 - [x] Django REST Authentication (Token-based) integration on Phone
 - [x] Secure Android Keystore-backed credential storage
@@ -54,11 +54,17 @@ Django REST API (`/api/v1/telemetry/`)
     - Timestamp preservation from originating hardware sensor observations
     - Partial telemetry support (unobserved channels strictly null; never zero-filled or fabricated)
     - Integration with existing A2 `TransportEnvelope` and `WearTransportSender` (`TelemetryTransportHandoff`)
+- [x] Phone → Django Authenticated Telemetry Ingestion (A5)
+    - Clean HTTP client abstraction (`DjangoTelemetryClient`) sending CanonicalTelemetry to `POST /api/v1/telemetry/`
+    - Token-authenticated with `Authorization: Token <token>` via `TokenProvider` dependency boundary
+    - Strict credential hygiene: Authorization headers redacted from logs, tokens never logged or hardcoded
+    - Configurable backend base URL (no hardcoded localhost or production endpoints)
+    - Explicit failure semantics distinguishing success, auth failure, client failure, server failure, network failure, and malformed payload
+    - Integration coordinator (`PhoneTelemetryIngestionHandler`) extracting `CanonicalTelemetry` from validated `TransportEnvelope`s
 
 **NOT YET IMPLEMENTED:**
 - [ ] Additional platform/vendor health APIs, if required after physical hardware capability verification
 - [ ] Offline store-and-forward buffering
-- [ ] Django telemetry ingestion (Phone → Django REST API)
 - [ ] Real-time operational context tagging (G-load, flight phase)
 - [ ] Operational contexts synchronization
 
@@ -66,7 +72,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Technical Boundaries
 
-- **A4 prepares canonical telemetry for A2 transport.** Real sensor observations are mapped to canonical telemetry and enveloped for Watch → Phone transport. Phone → Django REST ingestion is not yet implemented.
+- **A5 implements authenticated ingestion.** Validated transport envelopes on the phone are extracted into canonical telemetry and transmitted directly to Django REST API (`POST /api/v1/telemetry/`). Store-and-forward offline buffering remains a future milestone.
 - **Fatigue Inference:** The Android application handles sensor acquisition and data transport only. Fatigue estimation is performed strictly upstream by the AeroVital Core.
 - **Database:** No direct PostgreSQL access is permitted from Android. The Django backend API serves as the sole system of record.
 - **Firebase:** Strictly excluded by design requirements.
