@@ -13,6 +13,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -213,5 +214,30 @@ class PhoneTelemetryIngestionHandlerTest {
         val result = handler.handleEnvelope((validationResult as com.aerovital.shared.transport.TransportResult.Success).data)
         assertTrue(result is TelemetryIngestResult.Success)
         assertEquals(1, mockWebServer.requestCount)
+    }
+
+    @Test
+    fun `telemetry is retained in durable queue when backend is offline and delivered upon recovery`() = runTest {
+        // 1. Backend is offline (returns 503)
+        mockWebServer.enqueue(MockResponse().setResponseCode(503).setBody("Service Unavailable"))
+
+        val envelope = createValidTelemetryEnvelope(messageId = "offline-test-msg")
+        val result = handler.handleEnvelope(envelope)
+
+        // Result reflects failure, but record is durably preserved in queue
+        assertTrue(result is TelemetryIngestResult.ServerError)
+        assertEquals(1, handler.queue.countTotal())
+        val queuedRecord = handler.queue.getRecord("offline-test-msg")
+        assertNotNull(queuedRecord)
+        assertEquals(com.aerovital.phone.queue.DeliveryState.FAILED_RETRYABLE, queuedRecord!!.deliveryState)
+
+        // 2. Backend recovers (returns 201)
+        mockWebServer.enqueue(MockResponse().setResponseCode(201).setBody("""{"status": "accumulating"}"""))
+
+        // Drain queue after backoff interval
+        val summary = handler.deliveryCoordinator.drainQueue(currentEpochMs = System.currentTimeMillis() + 60_000L)
+        assertEquals(1, summary.successCount)
+        assertEquals(0, handler.queue.countTotal())
+        assertNull(handler.queue.getRecord("offline-test-msg"))
     }
 }

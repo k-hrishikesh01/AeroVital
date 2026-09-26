@@ -35,7 +35,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Current Implementation State
 
-**IMPLEMENTED (A1, A2, A3, A4, A5):**
+**IMPLEMENTED (A1, A2, A3, A4, A5, A6):**
 - [x] Initial Android Studio / Gradle Kotlin DSL build configuration (`build.gradle.kts`, `settings.gradle.kts`)
 - [x] Django REST Authentication (Token-based) integration on Phone
 - [x] Secure Android Keystore-backed credential storage
@@ -61,10 +61,20 @@ Django REST API (`/api/v1/telemetry/`)
     - Configurable backend base URL (no hardcoded localhost or production endpoints)
     - Explicit failure semantics distinguishing success, auth failure, client failure, server failure, network failure, and malformed payload
     - Integration coordinator (`PhoneTelemetryIngestionHandler`) extracting `CanonicalTelemetry` from validated `TransportEnvelope`s
+- [x] Durable Store-and-Forward Telemetry Queue (A6)
+    - Crash-safe, durable queue store (`DurableTelemetryQueueStore`) persisting individual atomic JSON records in phone storage
+    - Explicit queue record contract (`DurableQueueRecord`) preserving exact A2 envelope fields, identity, and delivery lifecycle metadata
+    - Atomic file operations (`.tmp` write followed by atomic rename) guaranteeing durability across process crashes, restarts, and phone reboots
+    - Deterministic queue ordering (`RECORD_ORDER_COMPARATOR`: observation timestamp ASC, sequenceNumber ASC, enqueueTime ASC, messageId ASC)
+    - Delivery worker (`TelemetryDeliveryCoordinator`) reading pending records in deterministic order and transmitting via existing A5 client
+    - Bounded exponential retry policy (`QueueRetryPolicy`: 1s initial, 2.0x multiplier, 60s max, 5 attempts max, 10,000 capacity)
+    - Transient failure retention (network/5xx) with exponential backoff
+    - Authentication failure isolation (`AUTH_BLOCKED` on 401/403) pausing delivery until re-authentication without infinite retries
+    - Non-retryable error dead-lettering (`FAILED_TERMINAL` on 4xx/malformed/max retries) without silent data deletion
+    - Enqueue before delivery guarantee in `PhoneTelemetryIngestionHandler`
 
 **NOT YET IMPLEMENTED:**
 - [ ] Additional platform/vendor health APIs, if required after physical hardware capability verification
-- [ ] Offline store-and-forward buffering
 - [ ] Real-time operational context tagging (G-load, flight phase)
 - [ ] Operational contexts synchronization
 
@@ -72,7 +82,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Technical Boundaries
 
-- **A5 implements authenticated ingestion.** Validated transport envelopes on the phone are extracted into canonical telemetry and transmitted directly to Django REST API (`POST /api/v1/telemetry/`). Store-and-forward offline buffering remains a future milestone.
+- **A6 implements durable store-and-forward queuing.** Received transport envelopes are validated and durably enqueued to disk before delivery. Telemetry delivery coordinator dispatches records to Django REST API (`POST /api/v1/telemetry/`) with deterministic ordering, exponential backoff, auth blocking, and terminal dead-lettering. The phone queue serves strictly as a resilient delivery buffer, not an analytical or querying database.
 - **Fatigue Inference:** The Android application handles sensor acquisition and data transport only. Fatigue estimation is performed strictly upstream by the AeroVital Core.
 - **Database:** No direct PostgreSQL access is permitted from Android. The Django backend API serves as the sole system of record.
 - **Firebase:** Strictly excluded by design requirements.
