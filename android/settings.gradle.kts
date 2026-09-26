@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "AeroVital"
 include(":wear")
 include(":phone")
+include(":shared")

@@ -27,6 +27,7 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "viewModel" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
+gson = { group = "com.google.code.gson", name = "gson", version = "2.10.1" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 ui = { group = "androidx.compose.ui", name = "ui" }
 ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
@@ -43,5 +44,7 @@ core-splashscreen = { group = "androidx.core", name = "core-splashscreen", versi
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
