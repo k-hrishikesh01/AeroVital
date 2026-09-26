@@ -195,4 +195,30 @@ class DurableTelemetryQueueStoreTest {
         assertNotNull(store.getRecord("cap-5"))
         assertNull(store.getRecord("cap-overflow"))
     }
+
+    @Test
+    fun `getDiagnosticSummary correctly aggregates record counts by state`() {
+        val env1 = createEnvelope(messageId = "diag-pending", timestamp = 1000L)
+        val env2 = createEnvelope(messageId = "diag-retryable", timestamp = 2000L)
+        val env3 = createEnvelope(messageId = "diag-auth", timestamp = 3000L)
+        val env4 = createEnvelope(messageId = "diag-term", timestamp = 4000L)
+
+        store.enqueue(env1)
+        store.enqueue(env2)
+        store.enqueue(env3)
+        store.enqueue(env4)
+
+        store.markRetryableFailure("diag-retryable", "NET_ERR", "Timeout", 5000L)
+        store.markAuthBlocked("diag-auth", "AUTH_401", "Unauthorized")
+        store.markTerminalFailure("diag-term", "CLIENT_400", "Bad Request")
+
+        val summary = store.getDiagnosticSummary()
+        assertEquals(1, summary.pendingCount)
+        assertEquals(1, summary.retryableCount)
+        assertEquals(1, summary.authBlockedCount)
+        assertEquals(1, summary.terminalCount)
+        assertEquals(4, summary.totalCount)
+        assertEquals(1000L, summary.oldestPendingEpochMs)
+        assertEquals(2000L, summary.newestPendingEpochMs)
+    }
 }

@@ -35,7 +35,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Current Implementation State
 
-**IMPLEMENTED (A1, A2, A3, A4, A5, A6):**
+**IMPLEMENTED (A1, A2, A3, A4, A5, A6, A7):**
 - [x] Initial Android Studio / Gradle Kotlin DSL build configuration (`build.gradle.kts`, `settings.gradle.kts`)
 - [x] Django REST Authentication (Token-based) integration on Phone
 - [x] Secure Android Keystore-backed credential storage
@@ -72,6 +72,13 @@ Django REST API (`/api/v1/telemetry/`)
     - Authentication failure isolation (`AUTH_BLOCKED` on 401/403) pausing delivery until re-authentication without infinite retries
     - Non-retryable error dead-lettering (`FAILED_TERMINAL` on 4xx/malformed/max retries) without silent data deletion
     - Enqueue before delivery guarantee in `PhoneTelemetryIngestionHandler`
+- [x] Physical End-to-End Integration & Hardware Diagnostic Surface (A7)
+    - Watch Runtime Wiring (`WatchAcquisitionCoordinator`) managing `BODY_SENSORS` permission, sensor adapters, 1-second batching, and `TelemetryTransportHandoff`
+    - Watch Diagnostic Screen (`MainActivity`) with runtime permission prompt, live HR/Accel/Gyro sensor observations, phone node discovery, and packet transmission tracking
+    - Phone Service-Level Wiring (`WearTransportReceiver.getOrInitHandler`) enabling background message reception and ingestion even if MainActivity is not active
+    - Phone Network Security Configuration (`network_security_config.xml`) permitting cleartext HTTP strictly for development loopbacks (`10.0.2.2`, `127.0.0.1`, `localhost`)
+    - Dynamic Development Backend Configuration (`DevBackendConfig`) supporting ADB reverse tethering (`http://127.0.0.1:8000/`) and emulator (`http://10.0.2.2:8000/`)
+    - Phone Diagnostic Screen (`PhoneDiagnosticScreen`) providing live transport message tracking, read-only queue observability (`QueueDiagnosticSummary`), and manual drain trigger
 
 **NOT YET IMPLEMENTED:**
 - [ ] Additional platform/vendor health APIs, if required after physical hardware capability verification
@@ -82,7 +89,7 @@ Django REST API (`/api/v1/telemetry/`)
 
 ## Technical Boundaries
 
-- **A6 implements durable store-and-forward queuing.** Received transport envelopes are validated and durably enqueued to disk before delivery. Telemetry delivery coordinator dispatches records to Django REST API (`POST /api/v1/telemetry/`) with deterministic ordering, exponential backoff, auth blocking, and terminal dead-lettering. The phone queue serves strictly as a resilient delivery buffer, not an analytical or querying database.
+- **A7 enables physical software pipeline execution and diagnostic observability.** The watch runtime wires sensors through 1Hz canonical telemetry handoff to the transport sender, and the phone receiver eagerly routes background messages into the durable store-and-forward queue for delivery to Django. Diagnostic surfaces provide live hardware validation without modifying upstream contracts or inventing Android-side inference.
 - **Fatigue Inference:** The Android application handles sensor acquisition and data transport only. Fatigue estimation is performed strictly upstream by the AeroVital Core.
 - **Database:** No direct PostgreSQL access is permitted from Android. The Django backend API serves as the sole system of record.
 - **Firebase:** Strictly excluded by design requirements.

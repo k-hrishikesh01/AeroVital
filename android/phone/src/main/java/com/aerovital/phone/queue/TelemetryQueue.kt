@@ -85,4 +85,23 @@ interface TelemetryQueue {
      * Clears all records (primarily for testing and controlled cleanup).
      */
     fun clear()
+
+    /**
+     * Returns a snapshot diagnostic summary of queue counts by delivery state.
+     */
+    fun getDiagnosticSummary(): QueueDiagnosticSummary
 }
+
+/**
+ * Read-only diagnostic summary of telemetry queue states.
+ */
+data class QueueDiagnosticSummary(
+    val pendingCount: Int = 0,
+    val inFlightCount: Int = 0,
+    val retryableCount: Int = 0,
+    val authBlockedCount: Int = 0,
+    val terminalCount: Int = 0,
+    val totalCount: Int = 0,
+    val oldestPendingEpochMs: Long? = null,
+    val newestPendingEpochMs: Long? = null
+)

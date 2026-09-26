@@ -39,6 +39,9 @@ class TelemetryDeliveryCoordinator(
 ) {
     private val drainMutex = Mutex()
 
+    private val _lastDrainSummary = kotlinx.coroutines.flow.MutableStateFlow<QueueDrainSummary?>(null)
+    val lastDrainSummary: kotlinx.coroutines.flow.StateFlow<QueueDrainSummary?> = _lastDrainSummary
+
     /**
      * Drains pending records from the queue up to [batchLimit].
      *
@@ -155,7 +158,7 @@ class TelemetryDeliveryCoordinator(
             }
         }
 
-        QueueDrainSummary(
+        val summary = QueueDrainSummary(
             processedCount = processed,
             successCount = successCount,
             retryableFailureCount = retryableCount,
@@ -163,6 +166,8 @@ class TelemetryDeliveryCoordinator(
             authBlockedCount = authBlockedCount,
             lastResult = lastResult
         )
+        _lastDrainSummary.value = summary
+        summary
     }
 
     private fun handleTransientFailure(

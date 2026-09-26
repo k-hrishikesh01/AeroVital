@@ -215,6 +215,43 @@ class DurableTelemetryQueueStore(
         Unit
     }
 
+    override fun getDiagnosticSummary(): QueueDiagnosticSummary = lock.read {
+        var pending = 0
+        var inFlight = 0
+        var retryable = 0
+        var authBlocked = 0
+        var terminal = 0
+        var oldestEpoch: Long? = null
+        var newestEpoch: Long? = null
+
+        for (record in memoryIndex.values) {
+            when (record.deliveryState) {
+                DeliveryState.PENDING -> pending++
+                DeliveryState.IN_FLIGHT -> inFlight++
+                DeliveryState.FAILED_RETRYABLE -> retryable++
+                DeliveryState.AUTH_BLOCKED -> authBlocked++
+                DeliveryState.FAILED_TERMINAL -> terminal++
+                DeliveryState.DELIVERED -> {}
+            }
+            if (record.deliveryState == DeliveryState.PENDING || record.deliveryState == DeliveryState.FAILED_RETRYABLE) {
+                val epoch = record.timestamp
+                if (oldestEpoch == null || epoch < oldestEpoch) oldestEpoch = epoch
+                if (newestEpoch == null || epoch > newestEpoch) newestEpoch = epoch
+            }
+        }
+
+        QueueDiagnosticSummary(
+            pendingCount = pending,
+            inFlightCount = inFlight,
+            retryableCount = retryable,
+            authBlockedCount = authBlocked,
+            terminalCount = terminal,
+            totalCount = memoryIndex.size,
+            oldestPendingEpochMs = oldestEpoch,
+            newestPendingEpochMs = newestEpoch
+        )
+    }
+
     /**
      * Atomically writes record to `<messageId>.tmp` and renames to `<messageId>.json`.
      */

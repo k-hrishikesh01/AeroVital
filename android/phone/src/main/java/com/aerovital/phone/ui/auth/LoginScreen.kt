@@ -76,5 +76,40 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.error
             )
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Development Server URL configuration
+        val context = androidx.compose.ui.platform.LocalContext.current
+        var currentUrl by remember { mutableStateOf(com.aerovital.phone.data.remote.DevBackendConfig.getBaseUrl(context)) }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(text = "Dev Server: $currentUrl", style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = {
+                        com.aerovital.phone.data.remote.DevBackendConfig.setBaseUrl(
+                            context,
+                            com.aerovital.phone.data.remote.DevBackendConfig.DEFAULT_ADB_REVERSE_URL
+                        )
+                        currentUrl = com.aerovital.phone.data.remote.DevBackendConfig.getBaseUrl(context)
+                    }) {
+                        Text("127.0.0.1 (ADB)")
+                    }
+                    TextButton(onClick = {
+                        com.aerovital.phone.data.remote.DevBackendConfig.setBaseUrl(
+                            context,
+                            com.aerovital.phone.data.remote.DevBackendConfig.DEFAULT_EMULATOR_URL
+                        )
+                        currentUrl = com.aerovital.phone.data.remote.DevBackendConfig.getBaseUrl(context)
+                    }) {
+                        Text("10.0.2.2 (Emu)")
+                    }
+                }
+            }
+        }
     }
 }

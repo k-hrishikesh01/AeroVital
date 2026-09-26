@@ -107,4 +107,26 @@ class WearTransportReceiverTest {
         // Now "1" is no longer seen
         assertTrue(cache.addIfNotSeen("1"))
     }
+
+    @Test
+    fun `handleReceivedEnvelope updates diagnosticState on valid envelope`() = kotlinx.coroutines.test.runTest {
+        val env = createValidEnvelope(messageId = "diag-msg-01")
+        val json = gson.toJson(env)
+
+        receiver.handleReceivedEnvelope(json)
+
+        val diag = WearTransportReceiver.diagnosticState.value
+        assertEquals("diag-msg-01", diag.lastReceivedMessageId)
+        assertEquals("wear-001", diag.lastReceivedDeviceId)
+        assertEquals(env.timestamp, diag.lastReceivedTimestampEpochMs)
+        assertTrue(diag.totalReceivedEnvelopes > 0)
+    }
+
+    @Test
+    fun `handleReceivedEnvelope updates diagnosticState on error`() = kotlinx.coroutines.test.runTest {
+        receiver.handleReceivedEnvelope("invalid json payload")
+
+        val diag = WearTransportReceiver.diagnosticState.value
+        assertTrue(diag.lastError?.contains("MALFORMED_ENVELOPE") == true)
+    }
 }

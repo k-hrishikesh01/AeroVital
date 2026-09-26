@@ -29,6 +29,11 @@ class WearTransportSender(
         }
     )
 
+    /**
+     * Retrieves currently connected node IDs (typically the paired phone).
+     */
+    suspend fun getConnectedNodeIds(): List<String> = nodeProvider.getConnectedNodeIds()
+
     suspend fun sendEnvelope(envelope: TransportEnvelope): TransportResult<Unit> {
         val validation = TransportEnvelope.validate(envelope, System.currentTimeMillis())
         if (validation is TransportResult.Error) {

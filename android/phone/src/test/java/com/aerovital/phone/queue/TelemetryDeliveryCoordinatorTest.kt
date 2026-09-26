@@ -1,6 +1,7 @@
 package com.aerovital.phone.queue
 
 import com.aerovital.phone.data.remote.DjangoTelemetryClient
+import com.aerovital.phone.data.remote.TelemetryIngestResult
 import com.aerovital.phone.data.remote.TokenProvider
 import com.aerovital.shared.telemetry.CanonicalTelemetry
 import com.aerovital.shared.transport.TransportEnvelope
@@ -311,5 +312,20 @@ class TelemetryDeliveryCoordinatorTest {
         assertEquals(2, summary.successCount)
         assertEquals(0, recoveredQueue.countPending())
         assertEquals(0, recoveredQueue.countTotal())
+    }
+
+    @Test
+    fun `lastDrainSummary exposes latest drain outcome reactively`() = runTest {
+        mockWebServer.enqueue(MockResponse().setResponseCode(201).setBody("""{"status": "ok"}"""))
+
+        val env = createEnvelope(messageId = "summary-test-01")
+        queue.enqueue(env)
+
+        assertNull(coordinator.lastDrainSummary.value)
+
+        val summary = coordinator.drainQueue()
+        assertEquals(summary, coordinator.lastDrainSummary.value)
+        assertEquals(1, coordinator.lastDrainSummary.value?.successCount)
+        assertTrue(coordinator.lastDrainSummary.value?.lastResult is TelemetryIngestResult.Success)
     }
 }
