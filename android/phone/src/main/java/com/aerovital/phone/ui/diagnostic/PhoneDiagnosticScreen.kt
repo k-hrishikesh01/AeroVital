@@ -1,5 +1,6 @@
 package com.aerovital.phone.ui.diagnostic
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +20,8 @@ import com.aerovital.phone.data.remote.TelemetryIngestResult
 import com.aerovital.phone.queue.QueueDiagnosticSummary
 import com.aerovital.phone.telemetry.PhoneTelemetryIngestionHandler
 import com.aerovital.phone.transport.WearTransportReceiver
+import com.aerovital.phone.ui.theme.AeroDarkGreen
+import com.aerovital.phone.ui.theme.LocalThemeIsDark
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,11 +37,15 @@ import java.util.Locale
  * - Durable queue depth, failure classifications, and delivery states
  * - Manual queue drain trigger
  */
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+
 @Composable
 fun PhoneDiagnosticScreen(
     username: String? = null,
     pilot: PilotProfile?,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -70,6 +77,8 @@ fun PhoneDiagnosticScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
             .verticalScroll(scrollState)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -80,17 +89,32 @@ fun PhoneDiagnosticScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "AeroVital Diagnostics",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Milestone A7 Hardware Integration",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (onBack != null) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+                Column {
+                    Text(
+                        text = "AeroVital Diagnostics",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Milestone A7 Hardware Integration",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
             Button(
                 onClick = onLogout,
@@ -99,6 +123,9 @@ fun PhoneDiagnosticScreen(
                 Text("Logout")
             }
         }
+
+        val isDark = LocalThemeIsDark.current
+        val statusGreen = if (isDark) AeroDarkGreen else Color(0xFF2E7D32)
 
         // Section 1: Authentication State
         Card(
@@ -112,7 +139,7 @@ fun PhoneDiagnosticScreen(
                 Text(text = "Active Status: ${if (pilot?.isActive == true) "Active" else "Inactive"}")
                 Text(
                     text = "Auth Status: Authenticated (Token safely stored in Keystore)",
-                    color = Color(0xFF2E7D32),
+                    color = statusGreen,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -174,7 +201,7 @@ fun PhoneDiagnosticScreen(
                 if (urlUpdatedNotice) {
                     Text(
                         text = "Base URL updated to: $currentBaseUrl",
-                        color = Color(0xFF2E7D32),
+                        color = statusGreen,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -247,7 +274,7 @@ fun PhoneDiagnosticScreen(
                         is TelemetryIngestResult.MalformedPayloadError -> "MALFORMED: ${lastResult.reason}"
                         is TelemetryIngestResult.UnexpectedResponseError -> "UNEXPECTED (HTTP ${lastResult.statusCode}): ${lastResult.message}"
                     }
-                    val statusColor = if (lastResult is TelemetryIngestResult.Success) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                    val statusColor = if (lastResult is TelemetryIngestResult.Success) statusGreen else MaterialTheme.colorScheme.error
                     Text(
                         text = "Last Delivery Outcome: $statusText",
                         color = statusColor,

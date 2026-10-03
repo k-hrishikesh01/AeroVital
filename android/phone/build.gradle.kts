@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.material3)
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.play.services.wearable)
     implementation(project(":shared"))
     implementation(libs.ui.tooling.preview)
