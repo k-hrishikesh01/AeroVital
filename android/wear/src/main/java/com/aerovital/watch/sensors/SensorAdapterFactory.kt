@@ -7,13 +7,7 @@ import android.hardware.Sensor
 object SensorAdapterFactory {
     
     fun createHeartRateAdapter(context: Context): SensorAdapter {
-        return AndroidSensorAdapter(
-            sensorProvider = DefaultSensorProvider(context),
-            sensorType = SensorType.HEART_RATE,
-            androidSensorType = Sensor.TYPE_HEART_RATE,
-            unit = "bpm",
-            permission = Manifest.permission.BODY_SENSORS
-        )
+        return HealthServicesHeartRateAdapter(DefaultHealthMeasureProvider(context))
     }
 
     fun createAccelerometerAdapter(context: Context): SensorAdapter {

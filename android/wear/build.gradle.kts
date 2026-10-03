@@ -10,7 +10,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.aerovital.watch"
+        applicationId = "com.aerovital.phone"
         minSdk = 30
         targetSdk = 37
         versionCode = 1
@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.compose.ui.tooling)
     implementation(libs.core.splashscreen)
     implementation(libs.play.services.wearable)
+    implementation(libs.health.services.client)
+    implementation(libs.concurrent.futures.ktx)
     implementation(project(":shared"))
     implementation(libs.gson)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
