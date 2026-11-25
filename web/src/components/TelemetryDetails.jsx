@@ -1,9 +1,13 @@
 import React from 'react';
 import { formatPercentage } from '../utils/formatters';
 
-export function TelemetryDetails({ latestTelemetry, recentFeatures, signalQuality }) {
-  const heartRate = latestTelemetry?.heart_rate !== null && latestTelemetry?.heart_rate !== undefined
-    ? `${Math.round(latestTelemetry.heart_rate)} BPM`
+export function TelemetryDetails({ latestTelemetry, recentFeatures, signalQuality, latestHeartRate }) {
+  const hrVal = (latestHeartRate !== null && latestHeartRate !== undefined)
+    ? latestHeartRate
+    : (latestTelemetry?.heart_rate !== null && latestTelemetry?.heart_rate !== undefined ? latestTelemetry.heart_rate : null);
+
+  const heartRate = hrVal !== null
+    ? `${Math.round(hrVal)} BPM`
     : 'N/A';
 
   const spo2 = latestTelemetry?.spo2 !== null && latestTelemetry?.spo2 !== undefined

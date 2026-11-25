@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth';
+import BrandLogo from './common/BrandLogo';
 
 export function Header({
   liveStatus,
@@ -45,17 +46,13 @@ export function Header({
 
   return (
     <header className="aerovital-header">
+      <div className="header-tricolour-stripe" />
       <div className="header-container">
         
         {/* Left: Brand */}
         <div className="header-left">
           <div className="brand-wrapper">
-            <svg className="brand-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-              <path d="M2 17l10 5 10-5"></path>
-              <path d="M2 12l10 5 10-5"></path>
-            </svg>
-            <span className="brand-title">AEROVITAL</span>
+            <BrandLogo variant="auto" size={34} showText={true} />
           </div>
 
           <div className="desktop-only">

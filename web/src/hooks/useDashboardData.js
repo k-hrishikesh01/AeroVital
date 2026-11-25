@@ -141,10 +141,14 @@ export function useDashboardData(selectedMissionId = null) {
   }
 
   const latestTelemetry = recentTelemetry[0] || null;
+  const latestHeartRate = (currentState?.latest_heart_rate !== undefined && currentState?.latest_heart_rate !== null)
+    ? currentState.latest_heart_rate
+    : (recentTelemetry.find(t => t.heart_rate !== null && t.heart_rate !== undefined)?.heart_rate ?? null);
 
   return {
     currentState,
     latestTelemetry,
+    latestHeartRate,
     recentTelemetry,
     signalQuality,
     recentFeatures,

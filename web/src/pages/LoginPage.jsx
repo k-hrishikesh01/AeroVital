@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth';
+import BrandLogo from '../components/common/BrandLogo';
 
 export function LoginPage() {
   const { login, isLoading, authError } = useAuth();
@@ -26,20 +27,50 @@ export function LoginPage() {
   return (
     <div className="login-wrapper">
       <div className="login-card">
-        {/* Logo and Brand */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--primary-navy-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-navy)', marginBottom: '12px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-              <path d="M2 17l10 5 10-5"></path>
-              <path d="M2 12l10 5 10-5"></path>
-            </svg>
-          </div>
-          <h1 className="brand-title" style={{ fontSize: '22px' }}>AEROVITAL</h1>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Flight Deck Biometrics & Fatigue Intelligence</span>
+        {/* Subtle Tricolour Accent Line at the top of the card */}
+        <div
+          className="card-tricolour-accent"
+          style={{
+            height: '3px',
+            width: '100%',
+            background: 'var(--brand-tricolour-bar)',
+            borderRadius: '2px 2px 0 0',
+            marginBottom: '28px',
+          }}
+        />
+
+        {/* Official AeroVital Emblem & Aviation Brand Lockup */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
+          <BrandLogo variant="auto" size={76} alt="AeroVital Official Aircraft Emblem" />
+          <h1
+            className="brand-title"
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              marginTop: '14px',
+              textTransform: 'uppercase',
+            }}
+          >
+            AEROVITAL
+          </h1>
+          <span
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: 'var(--text-secondary)',
+              marginTop: '4px',
+            }}
+          >
+            Flight Deck Biometrics & Fatigue Intelligence
+          </span>
         </div>
 
-        <h2 className="login-header-title">Pilot Authentication</h2>
+        <h2 className="login-header-title" style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>
+          Pilot Authentication
+        </h2>
 
         {(localError || authError) && (
           <div className="auth-error-banner" role="alert">
@@ -87,7 +118,7 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
           AeroVital Mission-Critical Aeromedical System. Authorized flight personnel only.
         </div>
       </div>

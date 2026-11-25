@@ -13,13 +13,20 @@
   transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
 }
 
+.header-tricolour-stripe {
+  height: 3px;
+  width: 100%;
+  background: var(--brand-tricolour-bar);
+  flex-shrink: 0;
+}
+
 .header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 10px 24px;
   gap: 16px;
 }
 
@@ -63,11 +70,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--primary-navy-tint);
-  color: var(--primary-navy);
+  background: var(--bg-card-tinted);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
   padding: 4px 12px;
   border-radius: var(--radius-full);
   font-weight: 600;
+  font-size: 12px;
 }
 
 .header-actions {
@@ -122,17 +131,17 @@
   padding: 9px 16px;
   font-size: 13px;
   font-weight: 700;
-  background: var(--primary-navy);
-  color: #FFFFFF;
-  border: none;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(25, 55, 95, 0.25);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 }
 
 .btn-primary:hover {
-  background: var(--primary-navy-hover);
+  background: var(--btn-primary-hover);
 }
 
 .badge-counter {
@@ -163,13 +172,15 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primary-navy);
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 14px;
+  background: var(--bg-card-tinted);
+  border: 1.5px solid var(--border-light);
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
+  letter-spacing: 0.04em;
 }
 
 .pilot-header-meta {
@@ -764,8 +775,8 @@
 .login-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 28px;
-  padding: 44px 36px;
+  border-radius: 20px;
+  padding: 36px 32px;
   width: 100%;
   max-width: 440px;
   box-shadow: var(--shadow-lg);
@@ -774,9 +785,9 @@
 }
 
 .login-header-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
   text-align: center;
   margin-bottom: 24px;
@@ -788,18 +799,18 @@
 
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-secondary);
   margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .form-input {
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 14px;
+  padding: 13px 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-input);
   background: var(--bg-card-tinted);
   font-family: inherit;
@@ -810,30 +821,30 @@
 }
 
 .form-input:focus {
-  border-color: var(--primary-navy);
+  border-color: var(--border-focus);
   background: var(--bg-card);
-  box-shadow: 0 0 0 3px var(--primary-navy-tint);
+  box-shadow: 0 0 0 2px var(--border-subtle);
 }
 
 .btn-create-account {
   width: 100%;
-  padding: 15px;
+  padding: 14px;
   margin-top: 10px;
-  background: var(--primary-navy);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 14px;
-  font-size: 14px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(25, 55, 95, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 }
 
 .btn-create-account:hover {
-  background: var(--primary-navy-hover);
+  background: var(--btn-primary-hover);
 }
 
 .btn-create-account:disabled {

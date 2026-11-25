@@ -2,6 +2,7 @@ import React from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import BrandLogo from './components/common/BrandLogo';
 import './styles/theme.css';
 import './styles/dashboard.css';
 
@@ -18,18 +19,33 @@ function AppContent() {
         justifyContent: 'center',
         backgroundColor: 'var(--bg-app)',
         color: 'var(--text-primary)',
-        gap: '16px',
+        gap: '20px',
         fontFamily: 'var(--font-main)'
       }}>
+        <BrandLogo variant="auto" size={72} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            AeroVital
+          </div>
+          <div style={{
+            width: '120px',
+            height: '3px',
+            background: 'var(--brand-tricolour-bar)',
+            borderRadius: '2px',
+          }} />
+          <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-secondary)', letterSpacing: '0.04em', marginTop: '4px' }}>
+            Initializing AeroVital Session...
+          </div>
+        </div>
         <div style={{
-          width: '36px',
-          height: '36px',
-          border: '3px solid var(--border-light)',
-          borderTopColor: 'var(--primary-navy)',
+          width: '28px',
+          height: '28px',
+          border: '2px solid var(--border-light)',
+          borderTopColor: 'var(--text-primary)',
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
+          animation: 'spin 0.8s linear infinite',
+          marginTop: '6px'
         }}></div>
-        <div style={{ fontWeight: 700, fontSize: '15px' }}>Initializing AeroVital Session...</div>
         <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     );

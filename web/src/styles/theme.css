@@ -1,78 +1,107 @@
 /* ==========================================================================
-   AEROVITAL - Design System & Theme Engine
-   Tokens, Typography, and Base Resets
+   AEROVITAL - Global Design System & Aerospace Theme Tokens
+   Predominantly Monochrome (Black & White) with Restrained Indian Tricolour Accents
    ========================================================================== */
 
 :root {
-  /* Light Theme (AeroVital Clean Aviation Palette) */
-  --bg-app: #F4F5F9;
-  --bg-card: #FFFFFF;
-  --bg-card-tinted: #ECEEF4;
-  --bg-card-hover: #E6E9F0;
-  
-  --primary-navy: #19375F;
-  --primary-navy-hover: #122949;
-  --primary-navy-active: #0c1d35;
-  --primary-navy-tint: rgba(25, 55, 95, 0.08);
+  /* Brand Identity: Indian Tricolour Accents (Restrained brand signature) */
+  --brand-saffron: #FF9933;
+  --brand-white: #FFFFFF;
+  --brand-green: #138808;
+  --brand-saffron-tint: rgba(255, 153, 51, 0.12);
+  --brand-green-tint: rgba(19, 136, 8, 0.12);
+  --brand-tricolour-bar: linear-gradient(90deg, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%);
+  --brand-tricolour-soft: linear-gradient(90deg, rgba(255, 153, 51, 0.8) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(19, 136, 8, 0.8) 100%);
 
-  --text-primary: #0F172A;
-  --text-secondary: #5A6678;
-  --text-muted: #8C97A5;
+  /* Light Theme (Aviation Precision Clean Daylight Mode) */
+  --bg-app: #F6F7F9;
+  --bg-secondary: #EDEFF2;
+  --bg-card: #FFFFFF;
+  --bg-card-tinted: #F4F4F4;
+  --bg-card-hover: #EAEAEA;
+  --surface-elevated: #F4F4F4;
+
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
   --text-inverted: #FFFFFF;
 
-  --border-light: rgba(226, 232, 240, 0.85);
-  --border-input: #64748B;
-  --border-card-tint: rgba(0, 0, 0, 0.04);
+  --border-light: #DDDDDD;
+  --border-subtle: #EAEAEA;
+  --border-focus: #111111;
+  --border-input: #CCCCCC;
+  --border-card-tint: rgba(0, 0, 0, 0.05);
 
+  --btn-primary-bg: #111111;
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-hover: #262626;
+
+  /* Primary accent (Clean Monochrome) */
+  --primary-navy: #111111;
+  --primary-navy-hover: #262626;
+  --primary-navy-active: #000000;
+  --primary-navy-tint: rgba(0, 0, 0, 0.06);
+
+  /* Operational Semantic Status Tokens (Preserved for flight safety clarity) */
   --color-normal: #10B981;
   --color-normal-bg: rgba(16, 185, 129, 0.12);
   --color-warning: #F59E0B;
-  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-warning-bg: rgba(245, 158, 11, 0.14);
   --color-alert: #EF4444;
-  --color-alert-bg: rgba(239, 68, 68, 0.12);
-  --color-cyan: #0EA5E9;
+  --color-alert-bg: rgba(239, 68, 68, 0.14);
+  --color-cyan: #06B6D4;
   --color-purple: #8B5CF6;
-  --color-insufficient: #94A3B8;
-  --color-insufficient-bg: rgba(148, 163, 184, 0.14);
+  --color-insufficient: #71717A;
+  --color-insufficient-bg: rgba(113, 113, 122, 0.14);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-  --shadow-lg: 0 14px 34px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  --shadow-card: 0 2px 8px -1px rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
   
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 9999px;
 
   --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, Monaco, monospace;
   --transition-fast: 0.15s ease;
-  --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Cockpit Night Vision / Dark HUD Theme */
+/* Cockpit Night Vision / Aerospace Dark HUD Theme (Default Aerospace Presentation) */
 body.dark-theme {
-  --bg-app: #0A0F1D;
-  --bg-card: #111A2E;
-  --bg-card-tinted: #18233C;
-  --bg-card-hover: #1F2E4D;
+  --bg-app: #050505;
+  --bg-secondary: #0D0D0D;
+  --bg-card: #111111;
+  --bg-card-tinted: #181818;
+  --bg-card-hover: #1E1E1E;
+  --surface-elevated: #181818;
 
-  --primary-navy: #2B6CB0;
-  --primary-navy-hover: #3182CE;
-  --primary-navy-active: #4299E1;
-  --primary-navy-tint: rgba(43, 108, 176, 0.2);
+  --text-primary: #FFFFFF;
+  --text-secondary: #B5B5B5;
+  --text-muted: #737373;
+  --text-inverted: #0A0A0A;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-inverted: #0F172A;
+  --border-light: #303030;
+  --border-subtle: #202020;
+  --border-focus: #FFFFFF;
+  --border-input: #383838;
+  --border-card-tint: rgba(255, 255, 255, 0.06);
 
-  --border-light: rgba(255, 255, 255, 0.08);
-  --border-input: #475569;
-  --border-card-tint: rgba(255, 255, 255, 0.04);
+  --btn-primary-bg: #FFFFFF;
+  --btn-primary-text: #050505;
+  --btn-primary-hover: #E5E5E5;
 
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 14px 34px -4px rgba(0, 0, 0, 0.6);
+  --primary-navy: #FFFFFF;
+  --primary-navy-hover: #E5E5E5;
+  --primary-navy-active: #CCCCCC;
+  --primary-navy-tint: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.9);
 }
 
 *, *::before, *::after {
@@ -93,21 +122,29 @@ body {
   min-height: 100vh;
 }
 
+/* Tabular numbers for telemetry instruments */
+.mono-num {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono, var(--font-main));
+  letter-spacing: -0.02em;
+}
+
 /* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg-app);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
+  background: var(--border-light);
   border-radius: var(--radius-full);
 }
 
-.mono-num {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  letter-spacing: -0.02em;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

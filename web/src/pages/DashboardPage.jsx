@@ -11,12 +11,13 @@ import AtmosphericStrip from '../components/AtmosphericStrip';
 import TelemetryLogsTable from '../components/TelemetryLogsTable';
 import AlertsDrawer from '../components/AlertsDrawer';
 import PilotProfileModal from '../components/PilotProfileModal';
-import DemoECGPanel from '../components/DemoECGPanel';
+import ECGStatusPanel from '../components/DemoECGPanel';
 
 export function DashboardPage() {
   const {
     currentState,
     latestTelemetry,
+    latestHeartRate,
     recentTelemetry,
     signalQuality,
     recentFeatures,
@@ -32,7 +33,7 @@ export function DashboardPage() {
     refetch,
   } = useDashboardData();
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('aerovital_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('aerovital_theme') || 'dark');
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -64,8 +65,12 @@ export function DashboardPage() {
     setIsMobilePreview(prev => !prev);
   };
 
-  const activeMission = currentState?.mission || (missions && missions[0]) || null;
-  const currentBpm = latestTelemetry?.heart_rate ? Math.round(latestTelemetry.heart_rate) : 75;
+  const activeMission = (currentState?.mission?.status === 'ACTIVE' ? currentState.mission : null)
+    || (missions && missions.find(m => m.status === 'ACTIVE' && (!m.end_time || new Date(m.end_time) > new Date())))
+    || null;
+  const currentBpm = (currentState?.latest_heart_rate !== undefined && currentState?.latest_heart_rate !== null)
+    ? Math.round(currentState.latest_heart_rate)
+    : (latestTelemetry?.heart_rate ? Math.round(latestTelemetry.heart_rate) : null);
 
   return (
     <div className="app-layout">
@@ -104,6 +109,7 @@ export function DashboardPage() {
 
             <TelemetryDetails
               latestTelemetry={latestTelemetry}
+              latestHeartRate={latestHeartRate}
               recentFeatures={recentFeatures}
               signalQuality={signalQuality}
             />
@@ -111,8 +117,8 @@ export function DashboardPage() {
 
           {/* Right Column: Real Telemetry Stream & Historical Visualizations */}
           <section className="telemetry-column" aria-label="Advanced Biometrics & Charts">
-            {/* Explicit Demo/Simulation Bench (Preserves visual work honestly without faking telemetry) */}
-            <DemoECGPanel currentBpm={currentBpm} />
+            {/* Honest ECG Hardware Availability Status (Acquisition does not provide Lead-II) */}
+            <ECGStatusPanel />
 
             {/* Real State History Timeline Chart */}
             <VitalityTimelineChart estimates={estimates} />
