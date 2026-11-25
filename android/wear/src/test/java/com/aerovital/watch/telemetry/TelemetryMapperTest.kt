@@ -180,6 +180,66 @@ class TelemetryMapperTest {
     }
 
     @Test
+    fun `DefaultTimeAnchor converts realistic boot-relative nanoseconds below 1e12 correctly`() {
+        val fixedEpochMs = 1_791_038_400_000L // 2026-10-03T14:40:00Z
+        val fixedRealtimeNs = 500_000_000_000L // 500s uptime (< 1e12)
+        val anchor = DefaultTimeAnchor(
+            clockEpochMs = { fixedEpochMs },
+            elapsedRealtimeNanos = { fixedRealtimeNs }
+        )
+
+        // Event occurred 2 seconds prior to current realtime
+        val eventNs = 498_000_000_000L
+        val iso = anchor.toIsoTimestamp(eventNs)
+
+        assertEquals("2026-10-03T14:39:58Z", iso)
+    }
+
+    @Test
+    fun `DefaultTimeAnchor converts realistic boot-relative nanoseconds above 1e12 without day-leap distortion`() {
+        val fixedEpochMs = 1_791_038_400_000L // 2026-10-03T14:40:00Z
+        // 30.2 trillion ns (~8.38 hours uptime, typical long-running watch)
+        val fixedRealtimeNs = 30_200_000_000_000L
+        val anchor = DefaultTimeAnchor(
+            clockEpochMs = { fixedEpochMs },
+            elapsedRealtimeNanos = { fixedRealtimeNs }
+        )
+
+        // Event occurred at exact current realtime
+        val isoNow = anchor.toIsoTimestamp(fixedRealtimeNs)
+        assertEquals("2026-10-03T14:40:00Z", isoNow)
+
+        // Event occurred 5 seconds prior
+        val eventNs = 30_195_000_000_000L
+        val isoPast = anchor.toIsoTimestamp(eventNs)
+        assertEquals("2026-10-03T14:39:55Z", isoPast)
+    }
+
+    @Test
+    fun `DefaultTimeAnchor preserves consecutive 1-second sample intervals accurately`() {
+        val fixedEpochMs = 1_791_038_400_000L // 2026-10-03T14:40:00Z
+        val fixedRealtimeNs = 30_200_000_000_000L
+        val anchor = DefaultTimeAnchor(
+            clockEpochMs = { fixedEpochMs },
+            elapsedRealtimeNanos = { fixedRealtimeNs }
+        )
+
+        val ts1 = 30_198_000_000_000L
+        val ts2 = 30_199_000_000_000L // Exactly 1,000,000,000 ns (1.00s) later
+
+        val iso1 = anchor.toIsoTimestamp(ts1)
+        val iso2 = anchor.toIsoTimestamp(ts2)
+
+        val instant1 = java.time.Instant.parse(iso1)
+        val instant2 = java.time.Instant.parse(iso2)
+        val deltaMs = java.time.Duration.between(instant1, instant2).toMillis()
+
+        assertEquals("2026-10-03T14:39:58Z", iso1)
+        assertEquals("2026-10-03T14:39:59Z", iso2)
+        assertEquals(1000L, deltaMs)
+    }
+
+    @Test
     fun `serialization of mapped telemetry produces valid JSON without fabricated channels`() {
         val obs = SensorObservation(
             timestampNs = 1234567890L,

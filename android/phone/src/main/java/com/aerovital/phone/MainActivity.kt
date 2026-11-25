@@ -23,6 +23,7 @@ import com.aerovital.phone.data.remote.SecureTokenManager
 import com.aerovital.phone.data.remote.TokenManager
 import com.aerovital.phone.data.repository.AuthRepository
 import com.aerovital.phone.data.repository.AuthState
+import com.aerovital.phone.data.repository.TelemetryRepository
 import com.aerovital.phone.transport.WearTransportReceiver
 import com.aerovital.phone.ui.auth.AuthViewModel
 import com.aerovital.phone.ui.auth.LoginScreen
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var authRepository: AuthRepository
     private lateinit var tokenManager: TokenManager
+    private lateinit var telemetryRepository: TelemetryRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +78,9 @@ class MainActivity : ComponentActivity() {
             },
             tokenManager = tokenManager
         )
+        telemetryRepository = TelemetryRepository(
+            telemetryApi = ApiClient.getTelemetryApi(applicationContext)
+        )
 
         setContent {
             val context = LocalContext.current
@@ -91,6 +96,8 @@ class MainActivity : ComponentActivity() {
                     )
                     
                     val authState by authViewModel.authState.collectAsStateWithLifecycle()
+                    val latestTelemetryDto by telemetryRepository.latestTelemetry.collectAsStateWithLifecycle()
+                    val latestHeartRate = latestTelemetryDto?.heartRate
                     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.DASHBOARD) }
 
                     when (authState) {
@@ -108,6 +115,7 @@ class MainActivity : ComponentActivity() {
                                     DashboardScreen(
                                         username = auth.username,
                                         pilot = auth.pilot,
+                                        latestHeartRate = latestHeartRate,
                                         onNavigate = { destination ->
                                             currentScreen = destination
                                         },
@@ -121,6 +129,7 @@ class MainActivity : ComponentActivity() {
                                     DetailsScreen(
                                         username = auth.username,
                                         pilot = auth.pilot,
+                                        latestHeartRate = latestHeartRate,
                                         onBack = { currentScreen = AppScreen.DASHBOARD },
                                         onDiagnosticsClick = { currentScreen = AppScreen.DIAGNOSTICS }
                                     )
@@ -184,6 +193,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::telemetryRepository.isInitialized) {
+            telemetryRepository.startPolling()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (::telemetryRepository.isInitialized) {
+            telemetryRepository.stopPolling()
         }
     }
 }

@@ -70,6 +70,9 @@ class CurrentStateView(APIView):
             sqi_qs = sqi_qs.filter(pilot_id=pilot_id)
         latest_sqi = sqi_qs.first()
 
+        # Latest Real Heart Rate record
+        latest_hr_record = telemetry_qs.filter(heart_rate__isnull=False).first()
+
         # Mission info
         mission_info = None
         if mission_id:
@@ -99,6 +102,8 @@ class CurrentStateView(APIView):
             "baseline_version": latest_estimate.baseline_version_used if latest_estimate else None,
             "timestamp": latest_estimate.timestamp if latest_estimate else None,
             "last_telemetry_timestamp": latest_telemetry.timestamp if latest_telemetry else None,
+            "latest_heart_rate": latest_hr_record.heart_rate if latest_hr_record else None,
+            "latest_heart_rate_timestamp": latest_hr_record.timestamp.isoformat() if latest_hr_record else None,
             "freshness_sec": freshness_sec,
             "mission": mission_info,
         }

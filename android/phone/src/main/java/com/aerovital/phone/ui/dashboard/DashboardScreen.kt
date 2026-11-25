@@ -71,6 +71,7 @@ import java.util.Locale
 fun DashboardScreen(
     username: String? = null,
     pilot: PilotProfile?,
+    latestHeartRate: Double? = null,
     onNavigate: (AppScreen) -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -420,14 +421,18 @@ fun DashboardScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "WATCH STANDBY",
+                            text = if (latestHeartRate != null) "PHYSIOLOGICAL MONITORING" else "WATCH STANDBY",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Galaxy Watch is updating / charging • Telemetry stream will resume when online",
+                            text = if (latestHeartRate != null) {
+                                "Galaxy Watch biometrics active • Heart rate streaming live to flight deck"
+                            } else {
+                                "Galaxy Watch is updating / charging • Telemetry stream will resume when online"
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -469,7 +474,7 @@ fun DashboardScreen(
                         )
                     },
                     title = "Heart Rate Monitor",
-                    value = "-- BPM (Standby)",
+                    value = if (latestHeartRate != null) "${kotlin.math.round(latestHeartRate).toInt()} BPM" else "-- BPM (Standby)",
                     onClick = { onNavigate(AppScreen.DETAILS) }
                 )
 

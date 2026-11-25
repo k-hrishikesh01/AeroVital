@@ -22,7 +22,7 @@ interface TimeAnchor {
  * Handles:
  * 1. Monotonic nanoseconds since device boot (standard Android SensorEvent.timestamp).
  *    Derives event epoch time via boot offset anchor without altering true measurement time.
- * 2. Absolute epoch timestamps in nanoseconds (>= 1e18) or milliseconds (>= 1e12).
+ * 2. Absolute epoch timestamps in nanoseconds (>= 1e18 ~ year 2001+).
  */
 class DefaultTimeAnchor(
     private val clockEpochMs: () -> Long = { System.currentTimeMillis() },
@@ -39,10 +39,6 @@ class DefaultTimeAnchor(
             // Absolute epoch nanoseconds (e.g. >= 1e18 ~ year 2001+)
             timestampNs >= 1_000_000_000_000_000_000L -> {
                 Instant.ofEpochSecond(timestampNs / 1_000_000_000L, timestampNs % 1_000_000_000L)
-            }
-            // Absolute epoch milliseconds
-            timestampNs >= 1_000_000_000_000L -> {
-                Instant.ofEpochMilli(timestampNs)
             }
             // Monotonic nanoseconds since boot (standard Android SensorEvent.timestamp)
             else -> {

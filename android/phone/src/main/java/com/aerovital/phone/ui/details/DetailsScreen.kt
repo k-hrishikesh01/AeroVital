@@ -39,6 +39,7 @@ import com.aerovital.phone.data.model.auth.PilotProfile
 fun DetailsScreen(
     username: String? = null,
     pilot: PilotProfile?,
+    latestHeartRate: Double? = null,
     onBack: () -> Unit,
     onDiagnosticsClick: () -> Unit
 ) {
@@ -159,9 +160,13 @@ fun DetailsScreen(
                     )
                 },
                 title = "Heart Rate Monitor",
-                value = "-- BPM",
-                statusTag = "STANDBY",
-                description = "Galaxy Watch telemetry in standby during firmware update"
+                value = if (latestHeartRate != null) "${kotlin.math.round(latestHeartRate).toInt()} BPM" else "-- BPM",
+                statusTag = if (latestHeartRate != null) "LIVE" else "STANDBY",
+                description = if (latestHeartRate != null) {
+                    "Active optical heart rate telemetry streaming from Galaxy Watch"
+                } else {
+                    "Galaxy Watch telemetry in standby during firmware update"
+                }
             )
 
             MetricDetailCard(

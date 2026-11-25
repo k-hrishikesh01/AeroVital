@@ -26,6 +26,9 @@ class TelemetryIngestAndListView(APIView):
         device_id = request.query_params.get("device")
         if device_id:
             qs = qs.filter(device_id=device_id)
+        has_hr = request.query_params.get("has_hr")
+        if has_hr and has_hr.lower() in ("true", "1", "yes"):
+            qs = qs.filter(heart_rate__isnull=False)
 
         limit = min(int(request.query_params.get("limit", 100)), 500)
         serializer = TelemetrySerializer(qs[:limit], many=True)
