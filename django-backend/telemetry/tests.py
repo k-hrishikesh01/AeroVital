@@ -13,7 +13,9 @@ from missions.models import Mission
 from intelligence.models import Baseline, StateEstimate
 from alerts.models import Alert
 from .models import Telemetry, SignalQuality, FeatureWindow
-from .services import pipeline_manager
+from .services import pipeline_manager, build_operational_context
+from backend.core.schemas.context import MissionPhase, OperationalContext
+from backend.core.schemas.result import FatigueState
 
 
 class TelemetryCoreIntegrationTestCase(TestCase):
@@ -570,4 +572,273 @@ class TelemetryCoreIntegrationTestCase(TestCase):
         self.assertIsNone(record.skin_temperature)
         self.assertIsNone(record.rr_interval)
         self.assertIsNone(record.steps)
+
+
+class OperationalContextIntegrityTestCase(TestCase):
+    """Sprint 001: Operational Context Integrity and Data Flow Verification.
+    
+    Covers the 10 core operational context scenarios:
+    1. Missing mission phase (None / empty string).
+    2. Missing external G-load (None).
+    3. Explicit UNKNOWN phase.
+    4. Invalid phase (maps to UNKNOWN, not CRUISE).
+    5. Explicit CRUISE phase.
+    6. Explicit G-load of zero (0.0 not replaced with 1.0).
+    7. Missing operational context entirely (mission=None).
+    8. Insufficient contextual evidence (pipeline abstains with INSUFFICIENT_DATA).
+    9. Existing valid telemetry processing (NORMAL state under valid CRUISE context).
+    10. Existing state-estimation behaviour (ELEVATED_WORKLOAD under COMBAT_MANEUVER / high-G).
+    """
+
+    def setUp(self):
+        pipeline_manager._cache.clear()
+        self.user = User.objects.create_user(username="contexttester", password="password123")
+        self.pilot = Pilot.objects.create(
+            pilot_code="PILOT-CTX-01",
+            name="Capt. Context Test",
+            age=34,
+            sex="M",
+            is_active=True,
+        )
+        self.device = Device.objects.create(
+            pilot=self.pilot,
+            device_uid="WATCH-CTX-001",
+            device_type="WEAR_OS",
+            is_active=True,
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+        self.url = "/api/v1/telemetry/"
+
+    def test_scenario_1_missing_mission_phase(self):
+        """1. Missing mission phase (None and empty string) must remain None, not defaulted to CRUISE."""
+        now = timezone.now()
+        mission_none = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-NONE-PHASE",
+            current_phase=None,
+            external_g_load=1.0,
+            start_time=now,
+        )
+        ctx1 = build_operational_context(mission_none, now)
+        self.assertIsNotNone(ctx1)
+        self.assertIsNone(ctx1.mission_phase)
+
+        mission_empty = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-EMPTY-PHASE",
+            current_phase="   ",
+            external_g_load=1.0,
+            start_time=now,
+        )
+        ctx2 = build_operational_context(mission_empty, now)
+        self.assertIsNotNone(ctx2)
+        self.assertIsNone(ctx2.mission_phase)
+
+    def test_scenario_2_missing_external_g_load(self):
+        """2. Missing external G-load must remain None, never defaulted to 1.0."""
+        now = timezone.now()
+        mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-NONE-GLOAD",
+            current_phase="CRUISE",
+            external_g_load=None,
+            start_time=now,
+        )
+        ctx = build_operational_context(mission, now)
+        self.assertIsNotNone(ctx)
+        self.assertIsNone(ctx.external_g_load)
+
+    def test_scenario_3_explicit_unknown_phase(self):
+        """3. Explicit UNKNOWN phase must be parsed into MissionPhase.UNKNOWN."""
+        now = timezone.now()
+        mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-EXPLICIT-UNKNOWN",
+            current_phase="UNKNOWN",
+            external_g_load=1.0,
+            start_time=now,
+        )
+        ctx = build_operational_context(mission, now)
+        self.assertIsNotNone(ctx)
+        self.assertEqual(ctx.mission_phase, MissionPhase.UNKNOWN)
+
+    def test_scenario_4_invalid_phase_maps_to_unknown_not_cruise(self):
+        """4. Invalid phase values must map to MissionPhase.UNKNOWN, never silently defaulting to CRUISE."""
+        now = timezone.now()
+        mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-INVALID-PHASE",
+            current_phase="WARP_SPEED_INVALID",
+            external_g_load=1.0,
+            start_time=now,
+        )
+        ctx = build_operational_context(mission, now)
+        self.assertIsNotNone(ctx)
+        self.assertEqual(ctx.mission_phase, MissionPhase.UNKNOWN)
+        self.assertNotEqual(ctx.mission_phase, MissionPhase.CRUISE)
+
+    def test_scenario_5_explicit_cruise_phase(self):
+        """5. Explicitly supplied valid CRUISE values must continue working."""
+        now = timezone.now()
+        mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-EXPLICIT-CRUISE",
+            current_phase="CRUISE",
+            external_g_load=1.0,
+            start_time=now,
+        )
+        ctx = build_operational_context(mission, now)
+        self.assertIsNotNone(ctx)
+        self.assertEqual(ctx.mission_phase, MissionPhase.CRUISE)
+        self.assertEqual(ctx.external_g_load, 1.0)
+
+    def test_scenario_6_explicit_g_load_of_zero(self):
+        """6. Explicit numerical zero G-load must be preserved as 0.0, not replaced with 1.0."""
+        now = timezone.now()
+        mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-ZERO-GLOAD",
+            current_phase="CRUISE",
+            external_g_load=0.0,
+            start_time=now,
+        )
+        ctx = build_operational_context(mission, now)
+        self.assertIsNotNone(ctx)
+        self.assertEqual(ctx.external_g_load, 0.0)
+        self.assertNotEqual(ctx.external_g_load, 1.0)
+
+    def test_scenario_7_missing_operational_context_entirely(self):
+        """7. Missing operational context entirely (mission=None) returns None."""
+        now = timezone.now()
+        ctx = build_operational_context(None, now)
+        self.assertIsNone(ctx)
+
+    def test_scenario_8_insufficient_contextual_evidence_downstream_abstains(self):
+        """8. When autonomic fatigue is present but operational context is unverified (missing phase & G-load),
+        downstream Core intelligence must abstain with INSUFFICIENT_DATA and must not fabricate FATIGUE.
+        """
+        base_time = datetime(2026, 9, 25, 8, 0, 0, tzinfo=dt_timezone.utc)
+        Baseline.objects.create(
+            pilot=self.pilot,
+            baseline_version="BASELINE-CTX-TEST",
+            resting_heart_rate=60.0,
+            baseline_rmssd=50.0,
+            baseline_sdnn=55.0,
+            baseline_mean_rr=1000.0,
+            is_calibrated=True,
+        )
+
+        # Mission with MISSING phase (None) and MISSING G-load (None)
+        unverified_mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-UNVERIFIED-MISSION",
+            current_phase=None,
+            external_g_load=None,
+            start_time=base_time,
+            status="ACTIVE",
+        )
+
+        # Ingest 5 samples with depressed RMSSD (~8ms vs baseline 50ms)
+        latest_res = None
+        for i in range(5):
+            t = base_time + timedelta(seconds=i * 2)
+            latest_res = self.client.post(self.url, {
+                "mission": str(unverified_mission.id),
+                "pilot": str(self.pilot.id),
+                "timestamp": t.isoformat(),
+                "heart_rate": 60.5,
+                "rr_interval": [980.0, 988.0, 980.0, 988.0],
+            }, format="json")
+
+        self.assertEqual(latest_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(latest_res.data["status"], "evaluated")
+
+        est = StateEstimate.objects.filter(mission=unverified_mission).first()
+        self.assertIsNotNone(est)
+        # MUST ABSTAIN because benign context is not established!
+        self.assertEqual(est.fatigue_state, "INSUFFICIENT_DATA")
+        self.assertIsNone(est.fatigue_score)
+        self.assertTrue(
+            any("unverified by operational context" in f for f in est.dominant_factors),
+            f"Expected operational context unverified factor in {est.dominant_factors}"
+        )
+
+    def test_scenario_9_existing_valid_telemetry_processing_normal(self):
+        """9. Positive baseline concordance with explicit benign CRUISE flight context produces NORMAL."""
+        base_time = datetime(2026, 9, 25, 9, 0, 0, tzinfo=dt_timezone.utc)
+        Baseline.objects.create(
+            pilot=self.pilot,
+            baseline_version="BASELINE-NORMAL-VALID",
+            resting_heart_rate=68.0,
+            baseline_rmssd=45.0,
+            is_calibrated=True,
+        )
+
+        cruise_mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-VALID-CRUISE",
+            current_phase="CRUISE",
+            external_g_load=1.0,
+            start_time=base_time,
+            status="ACTIVE",
+        )
+
+        latest_res = None
+        for i in range(5):
+            t = base_time + timedelta(seconds=i * 2)
+            latest_res = self.client.post(self.url, {
+                "mission": str(cruise_mission.id),
+                "pilot": str(self.pilot.id),
+                "timestamp": t.isoformat(),
+                "heart_rate": 69.0,
+                "rr_interval": [870.0, 915.0, 870.0, 915.0],
+            }, format="json")
+
+        self.assertEqual(latest_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(latest_res.data["status"], "evaluated")
+
+        est = StateEstimate.objects.filter(mission=cruise_mission).first()
+        self.assertIsNotNone(est)
+        self.assertEqual(est.fatigue_state, "NORMAL")
+        self.assertGreaterEqual(est.confidence, 0.70)
+
+    def test_scenario_10_existing_state_estimation_workload(self):
+        """10. Elevated HR under explicit COMBAT_MANEUVER / high-G context produces ELEVATED_WORKLOAD."""
+        base_time = datetime(2026, 9, 25, 10, 0, 0, tzinfo=dt_timezone.utc)
+        Baseline.objects.create(
+            pilot=self.pilot,
+            baseline_version="BASELINE-WORKLOAD-VALID",
+            resting_heart_rate=65.0,
+            baseline_rmssd=50.0,
+            is_calibrated=True,
+        )
+
+        combat_mission = Mission.objects.create(
+            pilot=self.pilot,
+            mission_code="CTX-COMBAT-HIGHG",
+            current_phase="COMBAT_MANEUVER",
+            external_g_load=3.5,
+            start_time=base_time,
+            status="ACTIVE",
+        )
+
+        latest_res = None
+        for i in range(5):
+            t = base_time + timedelta(seconds=i * 2)
+            latest_res = self.client.post(self.url, {
+                "mission": str(combat_mission.id),
+                "pilot": str(self.pilot.id),
+                "timestamp": t.isoformat(),
+                "heart_rate": 90.0,
+                "rr_interval": [630.0, 635.0, 630.0, 635.0],
+            }, format="json")
+
+        self.assertEqual(latest_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(latest_res.data["status"], "evaluated")
+
+        est = StateEstimate.objects.filter(mission=combat_mission).first()
+        self.assertIsNotNone(est)
+        self.assertEqual(est.fatigue_state, "ELEVATED_WORKLOAD")
+        self.assertGreaterEqual(est.confidence, 0.70)
 

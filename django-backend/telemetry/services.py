@@ -187,17 +187,50 @@ def parse_and_validate_telemetry_dict(data: Dict[str, Any]) -> TelemetrySample:
 
 
 def build_operational_context(mission: Optional[Mission], timestamp: datetime) -> Optional[OperationalContext]:
-    """Extract operational flight context from Mission if active."""
+    """Extract operational flight context from Mission if active.
+    
+    Preserves operational context integrity:
+    - Missing mission returns None (context unavailable).
+    - Missing mission phase (None or empty/whitespace) returns None for mission_phase.
+    - Explicit UNKNOWN phase returns MissionPhase.UNKNOWN.
+    - Invalid phase strings map to MissionPhase.UNKNOWN (never silently defaulted to CRUISE).
+    - Explicit valid phases (e.g. CRUISE, COMBAT_MANEUVER) are preserved.
+    - Missing external G-load (None) returns None (never defaulted to 1.0g).
+    - Explicit G-load of 0.0 is preserved as 0.0 (not replaced by truthiness fallback).
+    """
     if not mission:
         return None
 
-    phase_str = (mission.current_phase or "CRUISE").upper()
-    try:
-        phase = MissionPhase(phase_str)
-    except ValueError:
-        phase = MissionPhase.CRUISE
+    # Mission phase resolution
+    phase: Optional[MissionPhase] = None
+    raw_phase = getattr(mission, "current_phase", None)
+    if raw_phase is not None and str(raw_phase).strip():
+        phase_str = str(raw_phase).strip().upper()
+        try:
+            phase = MissionPhase(phase_str)
+        except ValueError:
+            logger.warning(
+                "Unrecognized mission phase '%s' on mission %s; mapping to UNKNOWN",
+                raw_phase,
+                getattr(mission, "id", "unknown"),
+            )
+            phase = MissionPhase.UNKNOWN
 
-    flight_duration = None
+    # External G-load resolution
+    external_g_load: Optional[float] = None
+    raw_g = getattr(mission, "external_g_load", None)
+    if raw_g is not None:
+        try:
+            external_g_load = float(raw_g)
+        except (ValueError, TypeError):
+            logger.warning(
+                "Non-numeric external_g_load '%s' on mission %s; treating as None",
+                raw_g,
+                getattr(mission, "id", "unknown"),
+            )
+            external_g_load = None
+
+    flight_duration: Optional[float] = None
     if mission.start_time:
         duration_delta = timestamp - mission.start_time
         flight_duration = max(0.0, duration_delta.total_seconds())
@@ -205,7 +238,7 @@ def build_operational_context(mission: Optional[Mission], timestamp: datetime) -
     return OperationalContext(
         timestamp=timestamp,
         mission_phase=phase,
-        external_g_load=mission.external_g_load or 1.0,
+        external_g_load=external_g_load,
         flight_duration_sec=flight_duration,
         metadata=mission.environment or {},
     )

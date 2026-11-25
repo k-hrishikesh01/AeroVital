@@ -26,7 +26,7 @@ class Mission(models.Model):
         db_index=True,
     )
     mission_type = models.CharField(max_length=100, default="ROUTINE_SORTIE")
-    current_phase = models.CharField(max_length=50, default="CRUISE", blank=True)
+    current_phase = models.CharField(max_length=50, null=True, blank=True, default=None)
     external_g_load = models.FloatField(null=True, blank=True)
     start_time = models.DateTimeField(db_index=True)
     end_time = models.DateTimeField(null=True, blank=True)
