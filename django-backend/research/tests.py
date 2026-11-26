@@ -13,8 +13,13 @@ Exhaustively verifies:
 10. Strict operational data isolation (0 writes to operational telemetry/missions/alerts).
 """
 
+import importlib
+import os
 from datetime import datetime, timezone
+from django.apps import apps as django_apps
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -284,3 +289,83 @@ class ResearchAppTests(TestCase):
         # Request with pseudo-token query param (must not authenticate via query param)
         res_query_token = unauthenticated_client.get("/api/v1/research/export/SYN-S001/?format=csv&token=fake-token-123")
         self.assertEqual(res_query_token.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class DemoResearcherMigrationTests(TestCase):
+    """Tests for research migration 0002_create_demo_accounts idempotent behavior."""
+
+    def setUp(self):
+        User.objects.filter(username="demo_researcher").delete()
+        self.migration_mod = importlib.import_module("research.migrations.0002_create_demo_accounts")
+        self.create_func = self.migration_mod.create_demo_researcher
+        self.apps = django_apps
+
+    def tearDown(self):
+        User.objects.filter(username="demo_researcher").delete()
+
+    def test_existing_account_preserves_password_and_fields(self):
+        """Case 1: Existing demo_researcher account credentials and fields must remain unchanged."""
+        original_hash = make_password("PreExistingPass999!")
+        User.objects.create(
+            username="demo_researcher",
+            email="existing@aerovital.internal",
+            first_name="Existing",
+            last_name="User",
+            password=original_hash,
+            is_staff=False,
+            is_superuser=False,
+            is_active=True,
+        )
+        os.environ["DEMO_RESEARCHER_PASSWORD"] = "DifferentPass123!"
+        self.create_func(self.apps, None)
+        user = User.objects.get(username="demo_researcher")
+        self.assertEqual(user.password, original_hash)
+        self.assertTrue(check_password("PreExistingPass999!", user.password))
+        self.assertEqual(user.email, "existing@aerovital.internal")
+        self.assertEqual(user.first_name, "Existing")
+
+    def test_new_account_created_with_hashed_password(self):
+        """Case 2: When account does not exist, it is created with hashed DEMO_RESEARCHER_PASSWORD."""
+        User.objects.filter(username="demo_researcher").delete()
+        os.environ["DEMO_RESEARCHER_PASSWORD"] = "SecureTestPass2026!"
+        self.create_func(self.apps, None)
+        user = User.objects.get(username="demo_researcher")
+        self.assertTrue(check_password("SecureTestPass2026!", user.password))
+        self.assertFalse(check_password("WrongPass", user.password))
+        self.assertTrue(user.is_active)
+
+    def test_missing_environment_variable_fails_safely(self):
+        """Case 3: When account does not exist and env var is missing, fail safely without creating user."""
+        User.objects.filter(username="demo_researcher").delete()
+        old_val = os.environ.pop("DEMO_RESEARCHER_PASSWORD", None)
+        try:
+            with self.assertRaises(ImproperlyConfigured):
+                self.create_func(self.apps, None)
+            self.assertFalse(User.objects.filter(username="demo_researcher").exists())
+        finally:
+            if old_val is not None:
+                os.environ["DEMO_RESEARCHER_PASSWORD"] = old_val
+
+    def test_repeated_execution_is_idempotent(self):
+        """Case 4: Repeated execution does not duplicate accounts or overwrite credentials."""
+        User.objects.filter(username="demo_researcher").delete()
+        os.environ["DEMO_RESEARCHER_PASSWORD"] = "Run1Password!"
+        self.create_func(self.apps, None)
+        user1 = User.objects.get(username="demo_researcher")
+        first_hash = user1.password
+
+        # Second run with different env var
+        os.environ["DEMO_RESEARCHER_PASSWORD"] = "Run2Password!"
+        self.create_func(self.apps, None)
+        self.assertEqual(User.objects.filter(username="demo_researcher").count(), 1)
+        user2 = User.objects.get(username="demo_researcher")
+        self.assertEqual(user2.password, first_hash)
+
+    def test_staff_and_superuser_privileges_are_not_granted(self):
+        """Case 5: Newly created demo_researcher has is_staff=False and is_superuser=False."""
+        User.objects.filter(username="demo_researcher").delete()
+        os.environ["DEMO_RESEARCHER_PASSWORD"] = "NonPrivPass123!"
+        self.create_func(self.apps, None)
+        user = User.objects.get(username="demo_researcher")
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)

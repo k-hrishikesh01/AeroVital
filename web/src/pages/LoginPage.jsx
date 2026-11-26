@@ -5,7 +5,7 @@ import BrandLogo from '../components/common/BrandLogo';
 export function LoginPage() {
   const { login, isLoading, authError } = useAuth();
   const [username, setUsername] = useState('demo_researcher');
-  const [password, setPassword] = useState('AeroVital2026!');
+  const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState(null);
 
   const handleSubmit = async (e) => {
