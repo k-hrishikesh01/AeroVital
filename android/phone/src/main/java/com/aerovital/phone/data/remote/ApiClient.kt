@@ -10,8 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
     private var retrofit: Retrofit? = null
 
-    // This can be changed in UI or dev settings, but defaults to a common local IP for emulator
-    var BASE_URL = "http://10.0.2.2:8000/"
+    // Centrally configured production endpoint; can be overridden in developer diagnostics
+    var BASE_URL: String = DevBackendConfig.PRODUCTION_API_URL
         set(value) {
             field = value
             retrofit = null // Force recreation on next get
@@ -23,12 +23,12 @@ object ApiClient {
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) {
-                    // Use HEADERS instead of BODY to avoid logging passwords in request bodies
+                    // Use HEADERS instead of BODY to avoid logging passwords or private biometrics
                     HttpLoggingInterceptor.Level.HEADERS
                 } else {
                     HttpLoggingInterceptor.Level.NONE
                 }
-                // Never log the Authorization header
+                // Never log the Authorization token header
                 redactHeader("Authorization")
             }
 

@@ -3,68 +3,113 @@ package com.aerovital.phone.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ==========================================
-// LIGHT THEME TOKENS (Accepted Gate 2B)
+// AEROVITAL MONOCHROME AVIATION DESIGN SYSTEM
 // ==========================================
 
-// Main AeroVital navy
-val AeroNavy = Color(0xFF173B63)
-
-// Dark version of navy
-val AeroDarkNavy = Color(0xFF071D35)
-
-// Secondary aviation blue
-val AeroBlue = Color(0xFF3F6B95)
-
-// Light blue used for containers
-val AeroLightBlue = Color(0xFFD6E4F5)
-
-// Application background
-val AeroBackground = Color(0xFFF6F8FA)
-
-// Card / surface background
-val AeroSurface = Color(0xFFFFFFFF)
-
-// Main text color
-val AeroText = Color(0xFF18212B)
-
-// Green for normal / healthy status
-val AeroGreen = Color(0xFF2E7D32)
-
+// Official Aerospace Tricolour Signature
+val AeroTricolourSaffron = Color(0xFFFF9933)
+val AeroTricolourWhite = Color(0xFFFFFFFF)
+val AeroTricolourGreen = Color(0xFF138808)
 
 // ==========================================
-// DARK THEME TOKENS (AeroVital Cockpit Dark)
+// LIGHT THEME TOKENS (Monochrome High-Clarity)
 // ==========================================
+val AeroLightCanvas = Color(0xFFF9FAFB)
+val AeroLightSurface = Color(0xFFFFFFFF)
+val AeroLightSurfaceElevated = Color(0xFFF3F4F6)
+val AeroLightSurfaceVariant = Color(0xFFE5E7EB)
 
-// Deep aviation midnight blue canvas (not pure black)
-val AeroDarkBackground = Color(0xFF0B1424)
+val AeroLightTextPrimary = Color(0xFF111827)
+val AeroLightTextSecondary = Color(0xFF4B5563)
+val AeroLightTextMuted = Color(0xFF6B7280)
 
-// Elevated card / surface background (distinct from background)
-val AeroDarkSurface = Color(0xFF132238)
+val AeroLightBorder = Color(0xFFE5E7EB)
+val AeroLightBorderSubtle = Color(0xFFEEEEEE)
+val AeroLightBorderStrong = Color(0xFFD1D5DB)
 
-// Secondary surface for cards/inputs/chips
-val AeroDarkSurfaceVariant = Color(0xFF1B2F4C)
+// Primary actionable button in Light mode (Monochrome Black)
+val AeroLightPrimaryAction = Color(0xFF111827)
+val AeroLightOnPrimary = Color(0xFFFFFFFF)
 
-// Navigation drawer header background
-val AeroDarkDrawerHeader = Color(0xFF0E1A2D)
+// Functional Blue (restrained, minor accent only)
+val AeroFunctionalBlue = Color(0xFF0284C7)
+val AeroFunctionalBlueTint = Color(0xFFE0F2FE)
 
-// Primary luminous aviation cyan-blue accent for dark mode (high contrast on dark surfaces)
-val AeroDarkPrimary = Color(0xFF5B9EE8)
+// ==========================================
+// DARK THEME TOKENS (Monochrome Cockpit HUD)
+// ==========================================
+val AeroDarkCanvas = Color(0xFF090A0C)
+val AeroDarkSurface = Color(0xFF121316)
+val AeroDarkSurfaceElevated = Color(0xFF18191D)
+val AeroDarkSurfaceVariant = Color(0xFF222429)
 
-// Container for active badges / chips in dark mode
-val AeroDarkPrimaryContainer = Color(0xFF1D3B63)
-val AeroDarkOnPrimaryContainer = Color(0xFFD6E8FF)
+val AeroDarkTextPrimary = Color(0xFFF9FAFB)
+val AeroDarkTextSecondary = Color(0xFF9CA3AF)
+val AeroDarkTextMuted = Color(0xFF6B7280)
 
-// Secondary aviation steel blue for secondary text / badges
-val AeroDarkSecondary = Color(0xFF8BB5E8)
+val AeroDarkBorder = Color(0xFF26282C)
+val AeroDarkBorderSubtle = Color(0xFF1C1D21)
+val AeroDarkBorderStrong = Color(0xFF383A40)
 
-// Text tokens
-val AeroDarkText = Color(0xFFE8EEF5)            // Primary text: crisp off-white with cool tint
-val AeroDarkSubtext = Color(0xFF9AB2CF)         // Secondary text: muted aviation slate
-val AeroDarkOnSurfaceVariant = Color(0xFFB5C9E2)// Tertiary text / icon tints
+// Primary actionable button in Dark HUD (Monochrome White)
+val AeroDarkPrimaryAction = Color(0xFFFFFFFF)
+val AeroDarkOnPrimary = Color(0xFF090A0C)
 
-// Borders / dividers
-val AeroDarkOutline = Color(0xFF264063)
-val AeroDarkOutlineVariant = Color(0xFF182A42)
+// Dark Functional Blue (restrained, minor accent only)
+val AeroDarkFunctionalBlue = Color(0xFF38BDF8)
+val AeroDarkFunctionalBlueTint = Color(0xFF0C2436)
 
-// Status indicators
-val AeroDarkGreen = Color(0xFF4CAF50)           // Accessible status green on dark
+// ==========================================
+// OPERATIONAL SEMANTIC COLORS (Aviation Standards)
+// ==========================================
+// Normal Baseline
+val AeroSemanticGreen = Color(0xFF10B981)
+val AeroSemanticGreenDark = Color(0xFF34D399)
+val AeroSemanticGreenTint = Color(0x1F10B981)
+
+// Elevated Cognitive Workload
+val AeroSemanticAmber = Color(0xFFF59E0B)
+val AeroSemanticAmberDark = Color(0xFFFBBF24)
+val AeroSemanticAmberTint = Color(0x1FF59E0B)
+
+// Physiological Fatigue
+val AeroSemanticRed = Color(0xFFEF4444)
+val AeroSemanticRedDark = Color(0xFFF87171)
+val AeroSemanticRedTint = Color(0x1FEF4444)
+
+// Insufficient Signal Quality
+val AeroSemanticGrey = Color(0xFF6B7280)
+val AeroSemanticGreyDark = Color(0xFF9CA3AF)
+val AeroSemanticGreyTint = Color(0x1F6B7280)
+
+// Legacy alias compatibility
+val AeroNavy = AeroLightPrimaryAction
+val AeroDarkNavy = AeroDarkCanvas
+val AeroBlue = AeroFunctionalBlue
+val AeroLightBlue = AeroFunctionalBlueTint
+val AeroBackground = AeroLightCanvas
+val AeroSurface = AeroLightSurface
+val AeroSurfaceElevated = AeroLightSurfaceElevated
+val AeroText = AeroLightTextPrimary
+val AeroSubtext = AeroLightTextSecondary
+val AeroBorder = AeroLightBorder
+val AeroGreen = AeroSemanticGreen
+val AeroAmber = AeroSemanticAmber
+val AeroRed = AeroSemanticRed
+val AeroTeal = AeroFunctionalBlue
+
+// Semantic State Indicators
+val AeroDarkGreen = AeroSemanticGreenDark
+val AeroDarkAmber = AeroSemanticAmberDark
+val AeroDarkOrange = Color(0xFFFB923C)
+val AeroDarkRed = AeroSemanticRedDark
+val AeroDarkPrimary = AeroDarkPrimaryAction
+val AeroDarkPrimaryContainer = AeroDarkSurfaceVariant
+val AeroDarkOnPrimaryContainer = AeroDarkTextPrimary
+val AeroDarkSecondary = AeroDarkFunctionalBlue
+val AeroDarkTeal = AeroDarkFunctionalBlue
+val AeroDarkText = AeroDarkTextPrimary
+val AeroDarkSubtext = AeroDarkTextSecondary
+val AeroDarkOnSurfaceVariant = AeroDarkTextSecondary
+val AeroDarkOutline = AeroDarkBorder
+val AeroDarkOutlineVariant = AeroDarkBorderSubtle

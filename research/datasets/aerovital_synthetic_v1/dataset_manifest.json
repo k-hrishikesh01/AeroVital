@@ -1,0 +1,106 @@
+{
+  "dataset_name": "AeroVital Synthetic Physiological Dataset v1",
+  "dataset_id": "aerovital-synthetic-v1",
+  "generator_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "generation_timestamp": "2026-11-25T13:40:12.022425+00:00",
+  "random_seed": 42,
+  "sampling_rate_hz": 1.0,
+  "total_records": 216000,
+  "total_participants": 30,
+  "total_sessions": 60,
+  "session_duration_sec": 3600,
+  "scenarios": [
+    "NORMAL_BASELINE",
+    "ELEVATED_COGNITIVE_WORKLOAD",
+    "FATIGUE_PHYSIOLOGICAL",
+    "DEGRADED_SIGNAL_QUALITY",
+    "MIXED_OPERATIONAL_CONDITIONS"
+  ],
+  "files": {
+    "README.md": {
+      "size_bytes": 8413,
+      "sha256": "285f30095d32865360643e7446ba5cfa27ed6b81ab1170a004e0f22b242f50c1"
+    },
+    "data_dictionary.md": {
+      "size_bytes": 7165,
+      "sha256": "bd5ea527e6bc77c119622082161f34f284be1a5a88cc9afb16be912305339ea5"
+    },
+    "engine_execution_report.md": {
+      "size_bytes": 4644,
+      "sha256": "6ae21810537df6c3cdd8a2c04636b3cac6647e405e47a2ce2c2b729546269ebf"
+    },
+    "engine_execution_results.json": {
+      "size_bytes": 26890,
+      "sha256": "2cd18f47ed2fdc300986a66bcfa40ac1564c5c30b20042d94db7e894d282a2f2"
+    },
+    "generate_dataset.py": {
+      "size_bytes": 28290,
+      "sha256": "b99919eb37b7256dde5dcd31355a1e05e44140a8692534d1f11407a60d60a628"
+    },
+    "generate_visualizations.py": {
+      "size_bytes": 14603,
+      "sha256": "9672d19c3f21f09e17fd5b041d86baca15b6a65d55716fe2d2756bc7390a610b"
+    },
+    "participants.json": {
+      "size_bytes": 12510,
+      "sha256": "73a3a264b69c2decc1a183d652f31b1146afe436907eb4f6038cc5b53184cf19"
+    },
+    "run_engine_evaluation.py": {
+      "size_bytes": 12919,
+      "sha256": "5e4287f31679f30d60eb3164a5f9cb190b25b03c847799e14cbc40911d0be526"
+    },
+    "sessions.json": {
+      "size_bytes": 36480,
+      "sha256": "a22afb0ef4253575616181f1203ddaba2df874f11475dba72be0919490484c10"
+    },
+    "statistical_summary.md": {
+      "size_bytes": 1300,
+      "sha256": "eb6adcf0deab1718b66aaf28328873e0010b871abaf30bb1a86be66f5831cd0a"
+    },
+    "synthetic_physiological_dataset.csv": {
+      "size_bytes": 36783462,
+      "sha256": "37b5c23c64888ec26cf8fe8590117fff95d50c0efa5f30b6ab2e5f0ebeaff2e5"
+    },
+    "synthetic_physiological_dataset.json": {
+      "size_bytes": 111268377,
+      "sha256": "daddff9f497edce4555f01fc1441585e766898585759a54c27038fb106578a63"
+    },
+    "synthetic_physiological_dataset.jsonl": {
+      "size_bytes": 111052377,
+      "sha256": "39e6d076f678076bb585283018670217db52a50ea713ecb427c44ee818a0d1ca"
+    },
+    "synthetic_physiological_dataset.jsonl.gz": {
+      "size_bytes": 4897522,
+      "sha256": "8556af9e364bb36e7592e40b20d89954a1c572360a4d90f67fd679ca504c3be9",
+      "decompressed_sha256": "39e6d076f678076bb585283018670217db52a50ea713ecb427c44ee818a0d1ca",
+      "format": "jsonl.gz",
+      "records": 216000
+    },
+    "validate_dataset.py": {
+      "size_bytes": 15803,
+      "sha256": "e9e1c3fa1bccfecb366b3f22da25e58e5a7707532f3451cd9a1d2b2bf0a450be"
+    },
+    "validation_report.md": {
+      "size_bytes": 1268,
+      "sha256": "56f9b1cdfdab542d4c07e724511bca50f401fdec6bcbeb302d8caa653335e725"
+    },
+    "visualizations/engine_fatigue_confidence_evaluation.png": {
+      "size_bytes": 149322,
+      "sha256": "a68d631e02e871218f1d1e4fa6e3b516e6029226bb319671ce191b5b3f6b2368"
+    },
+    "visualizations/mixed_operational_timeseries.png": {
+      "size_bytes": 485963,
+      "sha256": "66b9d8cd2c39851217ceca093426de8c249ac2cdf666f1585d238357eca8cc52"
+    },
+    "visualizations/scenario_comparison_hr_hrv.png": {
+      "size_bytes": 144756,
+      "sha256": "c0b8b3db03c6526c83a17a22af21931456cfa4254ff1d19ed0f60e53a452b1de"
+    },
+    "visualizations/signal_quality_distributions.png": {
+      "size_bytes": 185353,
+      "sha256": "7f1b7bc0387221422b48442fa2f790afea1ed88965d86e2e6f4586efdb92d1bb"
+    }
+  },
+  "operational_isolation_statement": "This dataset contains solely mathematically modeled synthetic physiological observations. It is completely isolated from production operational telemetry, real pilot baselines, and clinical records. Hardware channels not provided by the Wear OS acquisition layer (ECG, SpO2, skin temperature) are strictly represented as null."
+}

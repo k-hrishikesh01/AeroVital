@@ -7,7 +7,11 @@ import android.hardware.Sensor
 object SensorAdapterFactory {
     
     fun createHeartRateAdapter(context: Context): SensorAdapter {
-        return HealthServicesHeartRateAdapter(DefaultHealthMeasureProvider(context))
+        val fallback = HealthServicesHeartRateAdapter(DefaultHealthMeasureProvider(context))
+        return ExerciseHeartRateAdapter(
+            exerciseProvider = DefaultExerciseProvider(context),
+            fallbackAdapter = fallback
+        )
     }
 
     fun createAccelerometerAdapter(context: Context): SensorAdapter {

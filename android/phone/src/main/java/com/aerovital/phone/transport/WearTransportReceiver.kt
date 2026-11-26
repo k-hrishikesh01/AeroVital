@@ -5,6 +5,7 @@ import android.util.Log
 import com.aerovital.phone.BuildConfig
 import com.aerovital.phone.data.remote.ApiClient
 import com.aerovital.shared.transport.ErrorReason
+import com.aerovital.shared.transport.TelemetryAck
 import com.aerovital.shared.transport.TransportEnvelope
 import com.aerovital.shared.transport.TransportResult
 import com.google.android.gms.wearable.MessageEvent
@@ -42,13 +43,14 @@ class WearTransportReceiver : WearableListenerService() {
 
         if (messageEvent.path == MESSAGE_PATH) {
             val payloadString = String(messageEvent.data, Charsets.UTF_8)
+            val sourceNodeId = messageEvent.sourceNodeId
             scope.launch {
-                handleReceivedEnvelope(payloadString)
+                handleReceivedEnvelope(payloadString, sourceNodeId)
             }
         }
     }
 
-    internal suspend fun handleReceivedEnvelope(payloadString: String) {
+    internal suspend fun handleReceivedEnvelope(payloadString: String, sourceNodeId: String? = null) {
         val result = validateAndParse(payloadString)
         when (result) {
             is TransportResult.Success -> {
@@ -69,7 +71,18 @@ class WearTransportReceiver : WearableListenerService() {
                 } catch (e: Throwable) {
                     null
                 }
-                handler?.handleEnvelope(result.data)
+                val ingestResult = handler?.handleEnvelope(result.data)
+
+                // Dispatch application-level durable confirmation ACK back to the watch
+                if (sourceNodeId != null && ingestResult !is com.aerovital.phone.data.remote.TelemetryIngestResult.MalformedPayloadError) {
+                    val ack = TelemetryAck(
+                        messageId = result.data.messageId,
+                        batchId = result.data.batchId,
+                        sequenceNumber = result.data.sequenceNumber,
+                        status = TelemetryAck.STATUS_STORED
+                    )
+                    resolveAckSender()?.sendAck(sourceNodeId, ack)
+                }
             }
             is TransportResult.Error -> {
                 if (BuildConfig.DEBUG) {
@@ -78,7 +91,30 @@ class WearTransportReceiver : WearableListenerService() {
                 _diagnosticState.update { current ->
                     current.copy(lastError = "${result.reason}: ${result.message}")
                 }
+                // If message was a duplicate, send DUPLICATE ACK so watch can safely evict it from buffer
+                if (result.reason == ErrorReason.DUPLICATE_MESSAGE && sourceNodeId != null) {
+                    try {
+                        val parsed = gson.fromJson(payloadString, TransportEnvelope::class.java)
+                        val duplicateAck = TelemetryAck(
+                            messageId = parsed.messageId,
+                            batchId = parsed.batchId,
+                            sequenceNumber = parsed.sequenceNumber,
+                            status = TelemetryAck.STATUS_DUPLICATE
+                        )
+                        resolveAckSender()?.sendAck(sourceNodeId, duplicateAck)
+                    } catch (ignored: Exception) {}
+                }
             }
+        }
+    }
+
+    private fun resolveAckSender(): PhoneAckSender? {
+        val custom = customAckSender
+        if (custom != null) return custom
+        return try {
+            DefaultPhoneAckSender(applicationContext)
+        } catch (e: Throwable) {
+            null
         }
     }
 
@@ -108,6 +144,9 @@ class WearTransportReceiver : WearableListenerService() {
         
         // Thread-safe bounded cache
         val duplicateCache = DuplicateMessageCache(maxCapacity = 1000)
+
+        @Volatile
+        var customAckSender: PhoneAckSender? = null
 
         private val _envelopeFlow = MutableSharedFlow<TransportEnvelope>()
         val envelopeFlow: SharedFlow<TransportEnvelope> = _envelopeFlow

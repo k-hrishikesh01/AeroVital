@@ -261,3 +261,7 @@ web/dist/
 .gemini/
 .antigravity/
 scratch/
+# Oversized synthetic dataset blobs (>100MB) excluded from Git tracking (use .jsonl.gz instead)
+research/datasets/aerovital_synthetic_v1/synthetic_physiological_dataset.json
+research/datasets/aerovital_synthetic_v1/synthetic_physiological_dataset.jsonl
+!research/datasets/aerovital_synthetic_v1/synthetic_physiological_dataset.jsonl.gz

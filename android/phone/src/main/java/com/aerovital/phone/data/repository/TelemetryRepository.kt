@@ -14,14 +14,29 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Repository providing latest verified telemetry observations from Django backend.
+ * Repository providing latest verified telemetry observations and historical sortie telemetry
+ * from the Django REST backend.
  */
 class TelemetryRepository(
-    private val telemetryApi: TelemetryApi,
+    private val telemetryApiProvider: () -> TelemetryApi,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
+    // Secondary constructor for backward compatibility with unit tests
+    constructor(telemetryApi: TelemetryApi, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) : this({ telemetryApi }, scope)
+
+    private val telemetryApi: TelemetryApi get() = telemetryApiProvider()
+
     private val _latestTelemetry = MutableStateFlow<TelemetryDto?>(null)
     val latestTelemetry: StateFlow<TelemetryDto?> = _latestTelemetry.asStateFlow()
+
+    private val _telemetryHistory = MutableStateFlow<List<TelemetryDto>>(emptyList())
+    val telemetryHistory: StateFlow<List<TelemetryDto>> = _telemetryHistory.asStateFlow()
+
+    private val _historyLoading = MutableStateFlow(false)
+    val historyLoading: StateFlow<Boolean> = _historyLoading.asStateFlow()
+
+    private val _historyError = MutableStateFlow<String?>(null)
+    val historyError: StateFlow<String?> = _historyError.asStateFlow()
 
     private var pollingJob: Job? = null
 
@@ -56,6 +71,24 @@ class TelemetryRepository(
         } catch (e: Exception) {
             Log.w("TelemetryRepository", "Failed fetching telemetry from backend: ${e.message}")
             null
+        }
+    }
+
+    suspend fun fetchHistory() {
+        _historyLoading.value = true
+        _historyError.value = null
+        try {
+            val response = telemetryApi.getTelemetry(limit = 20, hasHr = null)
+            if (response.isSuccessful) {
+                _telemetryHistory.value = response.body() ?: emptyList()
+            } else {
+                _historyError.value = "Backend returned HTTP ${response.code()}"
+            }
+        } catch (e: Exception) {
+            Log.w("TelemetryRepository", "Failed fetching telemetry history: ${e.message}")
+            _historyError.value = e.message ?: "Failed connecting to backend"
+        } finally {
+            _historyLoading.value = false
         }
     }
 }

@@ -3,6 +3,7 @@ package com.aerovital.phone.ui.theme
 import android.content.Context
 import android.content.SharedPreferences
 import com.aerovital.phone.data.remote.FakeSharedPreferences
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,6 +28,25 @@ class ThemePreferencesTest {
     @Test
     fun `default dark mode is false (light mode default)`() {
         assertFalse(ThemePreferences.isDarkMode(fakeContext))
+    }
+
+    @Test
+    fun `default theme mode is SYSTEM`() {
+        assertEquals(ThemeMode.SYSTEM, ThemePreferences.getThemeMode(fakeContext))
+    }
+
+    @Test
+    fun `setThemeMode persists SYSTEM, LIGHT, and DARK correctly`() {
+        ThemePreferences.setThemeMode(fakeContext, ThemeMode.DARK)
+        assertEquals(ThemeMode.DARK, ThemePreferences.getThemeMode(fakeContext))
+        assertTrue(ThemePreferences.isDarkMode(fakeContext))
+
+        ThemePreferences.setThemeMode(fakeContext, ThemeMode.LIGHT)
+        assertEquals(ThemeMode.LIGHT, ThemePreferences.getThemeMode(fakeContext))
+        assertFalse(ThemePreferences.isDarkMode(fakeContext))
+
+        ThemePreferences.setThemeMode(fakeContext, ThemeMode.SYSTEM)
+        assertEquals(ThemeMode.SYSTEM, ThemePreferences.getThemeMode(fakeContext))
     }
 
     @Test

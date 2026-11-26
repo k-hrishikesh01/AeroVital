@@ -7,9 +7,16 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.aerovital.shared.telemetry.CanonicalTelemetry
+import com.aerovital.shared.transport.TelemetryAck
+import com.aerovital.shared.transport.TelemetryBatch
 import com.aerovital.shared.transport.TransportEnvelope
 import com.aerovital.shared.transport.TransportResult
+import com.aerovital.watch.queue.DurableWatchTelemetryBuffer
+import com.aerovital.watch.queue.WatchBatchRecord
+import com.aerovital.watch.telemetry.TelemetryMapper
 import com.aerovital.watch.telemetry.TelemetryTransportHandoff
+import com.aerovital.watch.transport.WatchAckListenerService
 import com.aerovital.watch.transport.WearTransportSender
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,22 +29,27 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Collections
+import java.util.UUID
 
 /**
- * Coordinates physical sensor acquisition on Wear OS and dispatches 1Hz batched
- * canonical telemetry envelopes to the phone via the existing A2/A3/A4 pipeline.
- *
- * Responsibilities:
- * - Runtime BODY_SENSORS permission state tracking and enforcement
- * - Sensor lifecycle (Heart Rate, Accelerometer, Gyroscope)
- * - Observation aggregation over 1-second sampling windows
- * - Handoff to TelemetryTransportHandoff and WearTransportSender
- * - Observable diagnostic state for the watch diagnostic surface
+ * Coordinates physical sensor acquisition on Wear OS with:
+ * - 1Hz local sensor aggregation
+ * - Bounded 5-10s radio batching for battery efficiency
+ * - Durable watch-side storage (observations never cleared before confirmed application ACK)
+ * - Chronological ordering, sequence numbers, batch IDs
+ * - Bounded exponential backoff on retries during disconnection
+ * - Application-level confirmation tracking from phone
  */
 class WatchAcquisitionCoordinator(
     private val context: Context,
     val transportSender: WearTransportSender = WearTransportSender(context),
     deviceId: String = resolveDeviceId(context),
+    val buffer: DurableWatchTelemetryBuffer = try {
+        context.filesDir?.let { DurableWatchTelemetryBuffer.create(context) }
+            ?: DurableWatchTelemetryBuffer.createTemporary()
+    } catch (e: Throwable) {
+        DurableWatchTelemetryBuffer.createTemporary()
+    },
     val transportHandoff: TelemetryTransportHandoff = TelemetryTransportHandoff(
         transportSender = transportSender,
         deviceId = deviceId
@@ -46,8 +58,12 @@ class WatchAcquisitionCoordinator(
     val heartRateAdapter: SensorAdapter = SensorAdapterFactory.createHeartRateAdapter(context),
     val accelerometerAdapter: SensorAdapter = SensorAdapterFactory.createAccelerometerAdapter(context),
     val gyroscopeAdapter: SensorAdapter = SensorAdapterFactory.createGyroscopeAdapter(context),
-    private val samplingIntervalMs: Long = 1000L
+    val samplingIntervalMs: Long = 1000L,
+    val batchingIntervalMs: Long = if (samplingIntervalMs < 1000L) samplingIntervalMs else 5000L,
+    private val mapper: TelemetryMapper = TelemetryMapper()
 ) {
+    val deviceId: String = deviceId
+
     // Observable UI State
     private val _permissionState = MutableStateFlow(resolveInitialPermissionState())
     val permissionState: StateFlow<SensorPermissionState> = _permissionState.asStateFlow()
@@ -79,19 +95,33 @@ class WatchAcquisitionCoordinator(
     private val _packetsSent = MutableStateFlow(0L)
     val packetsSent: StateFlow<Long> = _packetsSent.asStateFlow()
 
+    private val _acknowledgedPacketsCount = MutableStateFlow(0L)
+    val acknowledgedPacketsCount: StateFlow<Long> = _acknowledgedPacketsCount.asStateFlow()
+
     private val _lastTransportResult = MutableStateFlow<String?>(null)
     val lastTransportResult: StateFlow<String?> = _lastTransportResult.asStateFlow()
 
     private val _lastSentMessageId = MutableStateFlow<String?>(null)
     val lastSentMessageId: StateFlow<String?> = _lastSentMessageId.asStateFlow()
 
-    // 1-second batching buffer
+    private val _lastAckedMessageId = MutableStateFlow<String?>(null)
+    val lastAckedMessageId: StateFlow<String?> = _lastAckedMessageId.asStateFlow()
+
+    private val _pendingBufferCount = MutableStateFlow(buffer.countPending())
+    val pendingBufferCount: StateFlow<Int> = _pendingBufferCount.asStateFlow()
+
+    // 1-second sampling buffer & 5-second batching accumulator
     private val observationBuffer = Collections.synchronizedList(mutableListOf<SensorObservation>())
-    private var tickerJob: Job? = null
+    private val pendingBatchSamples = Collections.synchronizedList(mutableListOf<CanonicalTelemetry>())
+    private var sequenceNumber = 0L
+
+    private var samplingJob: Job? = null
+    private var transmissionJob: Job? = null
 
     init {
         refreshNodeStatus()
         refreshAvailabilities()
+        WatchAckListenerService.ackHandler = { ack -> onAckReceived(ack) }
     }
 
     private fun resolveInitialPermissionState(): SensorPermissionState {
@@ -110,18 +140,12 @@ class WatchAcquisitionCoordinator(
         }
     }
 
-    /**
-     * Checks and updates current permission state.
-     */
     fun checkCurrentPermissionState(): SensorPermissionState {
         val state = resolveInitialPermissionState()
         _permissionState.value = state
         return state
     }
 
-    /**
-     * Called when the runtime permission request dialog completes.
-     */
     fun onPermissionResult(granted: Boolean) {
         context.getSharedPreferences(PREFS_PERMISSIONS, Context.MODE_PRIVATE)
             .edit()
@@ -137,18 +161,12 @@ class WatchAcquisitionCoordinator(
         refreshAvailabilities()
     }
 
-    /**
-     * Re-checks sensor hardware availability flags.
-     */
     fun refreshAvailabilities() {
         _heartRateAvailability.value = heartRateAdapter.checkAvailability()
         _accelerometerAvailability.value = accelerometerAdapter.checkAvailability()
         _gyroscopeAvailability.value = gyroscopeAdapter.checkAvailability()
     }
 
-    /**
-     * Checks connected phone nodes via transport sender.
-     */
     fun refreshNodeStatus() {
         coroutineScope.launch {
             try {
@@ -161,7 +179,22 @@ class WatchAcquisitionCoordinator(
     }
 
     /**
-     * Starts sensor observation and periodic 1Hz transmission window.
+     * Handles application-level confirmation ACK received from the phone.
+     * Atomically removes the confirmed batch from durable watch disk storage.
+     */
+    fun onAckReceived(ack: TelemetryAck) {
+        val removed = buffer.markAcknowledged(ack.messageId)
+        if (removed) {
+            _acknowledgedPacketsCount.update { it + 1 }
+            _lastAckedMessageId.value = ack.messageId
+            _lastTransportResult.value = "ACK_CONFIRMED (${ack.messageId.take(8)})"
+            _pendingBufferCount.value = buffer.countPending()
+            Log.d(TAG, "Phone confirmed delivery for batch ${ack.messageId} (status: ${ack.status})")
+        }
+    }
+
+    /**
+     * Starts sensor observation, 1Hz canonical sampling, and periodic batched durable transmission.
      */
     fun startAcquisition() {
         if (_isAcquiring.value) return
@@ -169,7 +202,6 @@ class WatchAcquisitionCoordinator(
         refreshAvailabilities()
         refreshNodeStatus()
 
-        // Sensor listeners
         val hrListener = object : SensorListener {
             override fun onObservation(observation: SensorObservation) {
                 if (observation.values.isNotEmpty()) {
@@ -205,60 +237,153 @@ class WatchAcquisitionCoordinator(
             }
         }
 
-        // Start available sensors
         heartRateAdapter.start(hrListener)
         accelerometerAdapter.start(accelListener)
         gyroscopeAdapter.start(gyroListener)
 
         _isAcquiring.value = true
 
-        // 1-second transmission ticker
-        tickerJob = coroutineScope.launch {
+        // 1. Sampling loop (1Hz): generates CanonicalTelemetry from 1-second observation window
+        val batchTargetSamples = (batchingIntervalMs / samplingIntervalMs).toInt().coerceAtLeast(1)
+
+        samplingJob = coroutineScope.launch {
             while (isActive) {
                 delay(samplingIntervalMs)
 
-                val currentBatch = synchronized(observationBuffer) {
+                val oneSecondBatch = synchronized(observationBuffer) {
                     val batch = ArrayList(observationBuffer)
                     observationBuffer.clear()
                     batch
                 }
 
-                if (currentBatch.isNotEmpty()) {
+                if (oneSecondBatch.isNotEmpty()) {
                     try {
-                        val envelope: TransportEnvelope = transportHandoff.prepareEnvelope(currentBatch)
-                        _lastSentMessageId.value = envelope.messageId
-
-                        val sendResult = transportSender.sendEnvelope(envelope)
-                        when (sendResult) {
-                            is TransportResult.Success -> {
-                                _packetsSent.update { it + 1 }
-                                _lastTransportResult.value = "SUCCESS (${envelope.messageId.take(8)})"
-                                Log.d(TAG, "Sent envelope ${envelope.messageId} (observations: ${currentBatch.size})")
-                            }
-                            is TransportResult.Error -> {
-                                _lastTransportResult.value = "${sendResult.reason}: ${sendResult.message}"
-                                Log.w(TAG, "Transport send failed: ${sendResult.reason} - ${sendResult.message}")
+                        val canonical = mapper.map(oneSecondBatch)
+                        synchronized(pendingBatchSamples) {
+                            pendingBatchSamples.add(canonical)
+                            if (pendingBatchSamples.size >= batchTargetSamples) {
+                                flushSamplesToDurableBuffer()
                             }
                         }
                     } catch (e: Exception) {
-                        _lastTransportResult.value = "EXCEPTION: ${e.message}"
-                        Log.e(TAG, "Exception during telemetry transmission: ${e.message}", e)
+                        Log.e(TAG, "Error mapping 1s observation batch: ${e.message}", e)
                     }
                 }
+            }
+        }
+
+        // 2. Transmission & Retry worker loop: drains pending batches from durable buffer to phone
+        transmissionJob = coroutineScope.launch {
+            while (isActive) {
+                delay(batchingIntervalMs)
+                dispatchPendingBatches()
             }
         }
     }
 
     /**
-     * Stops sensor observation and cancels periodic transmission.
+     * Flushes currently accumulated 1s canonical samples into a durable TelemetryBatch envelope on disk.
+     */
+    fun flushSamplesToDurableBuffer() {
+        val samplesToFlush = synchronized(pendingBatchSamples) {
+            val list = ArrayList(pendingBatchSamples)
+            pendingBatchSamples.clear()
+            list
+        }
+        if (samplesToFlush.isEmpty()) return
+
+        val batchId = UUID.randomUUID().toString()
+        val seq = ++sequenceNumber
+        val batchPayload = TelemetryBatch(
+            batchId = batchId,
+            samples = samplesToFlush
+        )
+
+        val envelope = TransportEnvelope(
+            version = TransportEnvelope.CURRENT_VERSION,
+            messageId = batchId,
+            deviceId = deviceId,
+            timestamp = System.currentTimeMillis(),
+            payloadType = TransportEnvelope.PAYLOAD_TYPE_TELEMETRY_BATCH,
+            payload = batchPayload.toJson(),
+            sequenceNumber = seq,
+            batchId = batchId
+        )
+
+        buffer.enqueue(envelope)
+        _pendingBufferCount.value = buffer.countPending()
+        Log.d(TAG, "Enqueued batch $batchId (samples: ${samplesToFlush.size}, seq: $seq) durably to disk")
+    }
+
+    /**
+     * Dispatches pending unacknowledged batches from durable watch storage to the phone.
+     */
+    suspend fun dispatchPendingBatches() {
+        val pending = buffer.peekPending(limit = 10)
+        _pendingBufferCount.value = buffer.countPending()
+        if (pending.isEmpty()) return
+
+        val connectedNodes = try {
+            transportSender.getConnectedNodeIds()
+        } catch (e: Exception) {
+            emptyList()
+        }
+        _connectedNodesCount.value = connectedNodes.size
+
+        val isConnected = connectedNodes.isNotEmpty()
+        if (!isConnected) {
+            _lastTransportResult.value = "DISCONNECTED (${pending.size} buffered)"
+            for (record in pending) {
+                buffer.markTransmissionFailure(record.messageId, isLinkConnected = false)
+            }
+            return
+        }
+
+        for (record in pending) {
+            val envelope = record.toTransportEnvelope()
+            if (envelope == null) {
+                // Malformed record on disk; evict
+                buffer.markAcknowledged(record.messageId)
+                continue
+            }
+
+            _lastSentMessageId.value = envelope.messageId
+            val result = transportSender.sendEnvelope(envelope)
+            when (result) {
+                is TransportResult.Success -> {
+                    _packetsSent.update { it + 1 }
+                    _lastTransportResult.value = "SUCCESS (${envelope.messageId.take(8)})"
+                    Log.d(TAG, "Transmitted batch ${envelope.messageId} to phone, awaiting durable ACK")
+                }
+                is TransportResult.Error -> {
+                    buffer.markTransmissionFailure(record.messageId, isLinkConnected = true)
+                    _lastTransportResult.value = "${result.reason}: ${result.message}"
+                    Log.w(TAG, "Transmission failed for batch ${record.messageId}: ${result.reason}")
+                }
+            }
+        }
+        _pendingBufferCount.value = buffer.countPending()
+    }
+
+    /**
+     * Stops sensor observation and cancels transmission workers.
      */
     fun stopAcquisition() {
-        tickerJob?.cancel()
-        tickerJob = null
+        samplingJob?.cancel()
+        samplingJob = null
+        transmissionJob?.cancel()
+        transmissionJob = null
 
         heartRateAdapter.stop()
         accelerometerAdapter.stop()
         gyroscopeAdapter.stop()
+
+        // Flush any remaining samples to durable disk before stopping
+        synchronized(pendingBatchSamples) {
+            if (pendingBatchSamples.isNotEmpty()) {
+                flushSamplesToDurableBuffer()
+            }
+        }
 
         synchronized(observationBuffer) {
             observationBuffer.clear()

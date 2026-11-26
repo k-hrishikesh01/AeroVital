@@ -172,6 +172,85 @@ class WatchAcquisitionCoordinatorTest {
         assertEquals(0, coordinator.connectedNodesCount.value)
     }
 
+    @Test
+    fun `telemetry batches are retained in durable buffer until explicit application ACK`() = runTest {
+        val coordinator = WatchAcquisitionCoordinator(
+            context = fakeContext,
+            transportSender = transportSender,
+            deviceId = "test-watch-01",
+            coroutineScope = this,
+            heartRateAdapter = fakeHrAdapter,
+            accelerometerAdapter = fakeAccelAdapter,
+            gyroscopeAdapter = fakeGyroAdapter,
+            samplingIntervalMs = 50L
+        )
+
+        coordinator.startAcquisition()
+        fakeHrAdapter.pushObservation(floatArrayOf(75f), "bpm")
+        advanceTimeBy(60L)
+
+        // 1 batch sent
+        assertEquals(1L, coordinator.packetsSent.value)
+        val sentMsgId = coordinator.lastSentMessageId.value
+        assertNotNull(sentMsgId)
+
+        // Still retained in durable buffer waiting for ACK!
+        assertEquals(1, coordinator.pendingBufferCount.value)
+
+        // Phone ACK arrives
+        val ack = com.aerovital.shared.transport.TelemetryAck(
+            messageId = sentMsgId!!,
+            status = com.aerovital.shared.transport.TelemetryAck.STATUS_STORED
+        )
+        coordinator.onAckReceived(ack)
+
+        // Now buffer is cleared and acknowledged count incremented
+        assertEquals(0, coordinator.pendingBufferCount.value)
+        assertEquals(1L, coordinator.acknowledgedPacketsCount.value)
+        assertEquals(sentMsgId, coordinator.lastAckedMessageId.value)
+
+        coordinator.stopAcquisition()
+    }
+
+    @Test
+    fun `bluetooth disconnection buffers observations without data loss and replays upon reconnection`() = runTest {
+        val coordinator = WatchAcquisitionCoordinator(
+            context = fakeContext,
+            transportSender = transportSender,
+            deviceId = "test-watch-01",
+            coroutineScope = this,
+            heartRateAdapter = fakeHrAdapter,
+            accelerometerAdapter = fakeAccelAdapter,
+            gyroscopeAdapter = fakeGyroAdapter,
+            samplingIntervalMs = 50L
+        )
+
+        // 1. Simulate Bluetooth disconnected
+        fakeNodeProvider.nodes = emptyList()
+        coordinator.startAcquisition()
+
+        fakeHrAdapter.pushObservation(floatArrayOf(72f), "bpm")
+        advanceTimeBy(60L)
+
+        // Send failed due to disconnection, but packet is preserved in durable buffer!
+        assertEquals(0L, coordinator.packetsSent.value)
+        assertEquals(1, coordinator.pendingBufferCount.value)
+        assertTrue(coordinator.lastTransportResult.value?.contains("DISCONNECTED") == true)
+
+        // 2. Simulate Bluetooth reconnected
+        fakeNodeProvider.nodes = listOf("phone-node-001")
+        coordinator.refreshNodeStatus()
+
+        // Advance to trigger next dispatch
+        advanceTimeBy(60L)
+
+        // Buffer was replayed successfully without loss
+        assertEquals(1L, coordinator.packetsSent.value)
+        assertEquals(1, fakeMessageSender.sentMessages.size)
+
+        coordinator.stopAcquisition()
+    }
+
     // Test Doubles
     private fun createMockContext(prefs: SharedPreferences): Context {
         return object : android.content.ContextWrapper(null) {

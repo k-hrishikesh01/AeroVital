@@ -6,20 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +39,7 @@ import com.aerovital.watch.presentation.theme.AeroVitalTheme
 import com.aerovital.watch.sensors.SensorAvailability
 import com.aerovital.watch.sensors.SensorPermissionState
 import com.aerovital.watch.sensors.WatchAcquisitionCoordinator
+import com.aerovital.watch.service.WearAcquisitionService
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -53,7 +48,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        coordinator = WatchAcquisitionCoordinator(applicationContext)
+        val active = WearAcquisitionService.activeCoordinator ?: WatchAcquisitionCoordinator(applicationContext).also {
+            WearAcquisitionService.activeCoordinator = it
+        }
+        coordinator = active
 
         setContent {
             AeroVitalTheme {
@@ -64,9 +62,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::coordinator.isInitialized) {
-            coordinator.stopAcquisition()
-        }
+        // Acquisition lifecycle is owned by WearAcquisitionService;
+        // do not terminate sensor acquisition when Activity is destroyed.
     }
 }
 
@@ -84,6 +81,7 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
     }
 
     // Reactive states
+    val isServiceActive by WearAcquisitionService.isServiceActive.collectAsState()
     val permissionState by coordinator.permissionState.collectAsState()
     val hrAvailability by coordinator.heartRateAvailability.collectAsState()
     val accelAvailability by coordinator.accelerometerAvailability.collectAsState()
@@ -96,16 +94,19 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
     val isAcquiring by coordinator.isAcquiring.collectAsState()
     val connectedNodes by coordinator.connectedNodesCount.collectAsState()
     val packetsSent by coordinator.packetsSent.collectAsState()
+    val ackedCount by coordinator.acknowledgedPacketsCount.collectAsState()
+    val pendingBufferCount by coordinator.pendingBufferCount.collectAsState()
     val lastResult by coordinator.lastTransportResult.collectAsState()
     val lastSentMsgId by coordinator.lastSentMessageId.collectAsState()
+    val lastAckedMsgId by coordinator.lastAckedMessageId.collectAsState()
 
     DisposableEffect(Unit) {
         coordinator.refreshNodeStatus()
         coordinator.checkCurrentPermissionState()
-        onDispose {
-            // Cleaned up in Activity onDestroy
-        }
+        onDispose {}
     }
+
+    val isRunning = isAcquiring || isServiceActive
 
     AppScaffold {
         ScreenScaffold(scrollState = listState) { contentPadding ->
@@ -123,7 +124,7 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                         transformation = SurfaceTransformation(transformationSpec)
                     ) {
                         Text(
-                            text = "AeroVital Diagnostics",
+                            text = "AeroVital Flight Lab",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
@@ -132,7 +133,7 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                     }
                 }
 
-                // 1. Permission Status
+                // 1. Service Status & Permission
                 item {
                     val permColor = when (permissionState) {
                         SensorPermissionState.GRANTED -> Color(0xFF4CAF50)
@@ -155,6 +156,12 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                     ) {
                         Column(modifier = Modifier.padding(6.dp)) {
                             Text(
+                                text = "Foreground Service: ${if (isRunning) "ACTIVE (HEALTH)" else "IDLE"}",
+                                color = if (isRunning) Color(0xFF4CAF50) else Color.Gray,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
                                 text = "Permission: ${permissionState.name}",
                                 color = permColor,
                                 style = MaterialTheme.typography.bodySmall,
@@ -171,15 +178,20 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                     }
                 }
 
-                // 2. Acquisition Start/Stop Action
+                // 2. Acquisition Start/Stop Action (Controls WearAcquisitionService)
                 item {
-                    val buttonColor = if (isAcquiring) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+                    val buttonColor = if (isRunning) Color(0xFFD32F2F) else Color(0xFF2E7D32)
                     Button(
                         onClick = {
-                            if (isAcquiring) {
+                            if (isRunning) {
+                                WearAcquisitionService.stop(context)
                                 coordinator.stopAcquisition()
                             } else {
-                                coordinator.startAcquisition()
+                                if (permissionState != SensorPermissionState.GRANTED) {
+                                    permissionLauncher.launch(Manifest.permission.BODY_SENSORS)
+                                } else {
+                                    WearAcquisitionService.start(context)
+                                }
                             }
                         },
                         modifier = Modifier
@@ -189,14 +201,14 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                     ) {
                         Text(
-                            text = if (isAcquiring) "STOP ACQUISITION" else "START ACQUISITION",
+                            text = if (isRunning) "STOP SERVICE" else "START ACQUISITION",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
                 }
 
-                // 3. Heart Rate Status & Live BPM
+                // 3. Heart Rate Status & Live BPM (ExerciseClient / WHS)
                 item {
                     Card(
                         onClick = {},
@@ -289,10 +301,12 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                     }
                 }
 
-                // 6. Explicitly Unavailable Channels (Honesty per contract)
+                // 6. Durable Buffer & Phone ACK Confirmation
                 item {
                     Card(
-                        onClick = {},
+                        onClick = {
+                            coordinator.refreshNodeStatus()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .transformedHeight(this, transformationSpec),
@@ -300,15 +314,23 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                     ) {
                         Column(modifier = Modifier.padding(6.dp)) {
                             Text(
-                                text = "Unavailable in SensorManager:",
+                                text = "Durable Buffer (Crash-Safe):",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "RR-Int, SpO2, Skin-Temp",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray
+                                text = "Pending on Disk: $pendingBufferCount | Confirmed: $ackedCount",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (pendingBufferCount == 0) Color(0xFF4CAF50) else Color(0xFFFF9800)
                             )
+                            if (lastAckedMsgId != null) {
+                                Text(
+                                    text = "Last ACK: ${lastAckedMsgId!!.take(8)}...",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
                         }
                     }
                 }
@@ -330,21 +352,21 @@ fun WatchDiagnosticScreen(coordinator: WatchAcquisitionCoordinator) {
                                 color = if (connectedNodes > 0) Color(0xFF4CAF50) else Color(0xFFFF9800)
                             )
                             Text(
-                                text = "Envelopes Sent: $packetsSent",
+                                text = "Batches Dispatched: $packetsSent",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             if (lastSentMsgId != null) {
                                 Text(
-                                    text = "Last ID: ${lastSentMsgId!!.take(8)}...",
+                                    text = "Last Sent ID: ${lastSentMsgId!!.take(8)}...",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontFamily = FontFamily.Monospace
                                 )
                             }
                             if (lastResult != null) {
                                 Text(
-                                    text = "Result: $lastResult",
+                                    text = "Status: $lastResult",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (lastResult!!.startsWith("SUCCESS")) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    color = if (lastResult!!.startsWith("ACK") || lastResult!!.startsWith("SENT")) Color(0xFF4CAF50) else Color(0xFFF44336)
                                 )
                             }
                         }

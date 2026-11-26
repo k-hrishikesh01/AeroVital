@@ -1,0 +1,1011 @@
+{
+  "execution_metadata": {
+    "engine_orchestrator": "AeroVitalPipeline",
+    "engine_version": "1.0.0",
+    "evaluator": "ProvisionalRuleBasedEstimator",
+    "confidence_evaluator": "ConfidenceEvaluator",
+    "dataset_id": "aerovital-synthetic-v1",
+    "total_sessions_evaluated": 60,
+    "total_samples_processed": 216000,
+    "total_windows_evaluated": 215760,
+    "execution_duration_sec": 56.35,
+    "execution_timestamp": "2026-11-25T13:44:16.890891+00:00",
+    "disclaimer": "Provisional prototype intelligence engine evaluation for testing only; not clinically or operationally validated."
+  },
+  "scenario_evaluations": {
+    "NORMAL_BASELINE": {
+      "total_windows_evaluated": 43152,
+      "classification_counts": {
+        "FATIGUE": 28,
+        "INSUFFICIENT_DATA": 2404,
+        "NORMAL": 40720
+      },
+      "classification_percentages": {
+        "FATIGUE": 0.06,
+        "INSUFFICIENT_DATA": 5.57,
+        "NORMAL": 94.36
+      },
+      "mean_confidence": 0.985,
+      "mean_sqi": 0.999,
+      "top_dominant_factors": [
+        {
+          "factor": "Positive baseline concordance: HR and RMSSD within nominal limits",
+          "count": 40720
+        },
+        {
+          "factor": "Evidence insufficient or unconfirmed for any operational state",
+          "count": 2404
+        },
+        {
+          "factor": "Confirmed low G-load (1.0g)",
+          "count": 28
+        },
+        {
+          "factor": "Confirmed benign flight phase (CRUISE)",
+          "count": 28
+        },
+        {
+          "factor": "Depressed beat-to-beat variability (RMSSD ratio: 0.70)",
+          "count": 4
+        }
+      ]
+    },
+    "ELEVATED_COGNITIVE_WORKLOAD": {
+      "total_windows_evaluated": 43152,
+      "classification_counts": {
+        "ELEVATED_WORKLOAD": 28752,
+        "FATIGUE": 14400
+      },
+      "classification_percentages": {
+        "ELEVATED_WORKLOAD": 66.63,
+        "FATIGUE": 33.37
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996,
+      "top_dominant_factors": [
+        {
+          "factor": "High-workload flight phase (COMBAT_MANEUVER)",
+          "count": 21600
+        },
+        {
+          "factor": "Confirmed low G-load (1.1g)",
+          "count": 14400
+        },
+        {
+          "factor": "Confirmed benign flight phase (CRUISE)",
+          "count": 14400
+        },
+        {
+          "factor": "High-workload flight phase (CLIMB)",
+          "count": 7152
+        },
+        {
+          "factor": "High G-load (3.0g)",
+          "count": 1980
+        }
+      ]
+    },
+    "FATIGUE_PHYSIOLOGICAL": {
+      "total_windows_evaluated": 43152,
+      "classification_counts": {
+        "FATIGUE": 43139,
+        "INSUFFICIENT_DATA": 13
+      },
+      "classification_percentages": {
+        "FATIGUE": 99.97,
+        "INSUFFICIENT_DATA": 0.03
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998,
+      "top_dominant_factors": [
+        {
+          "factor": "Confirmed benign flight phase (CRUISE)",
+          "count": 43139
+        },
+        {
+          "factor": "Confirmed low G-load (1.0g)",
+          "count": 43031
+        },
+        {
+          "factor": "Depressed beat-to-beat variability (RMSSD ratio: 0.45)",
+          "count": 3026
+        },
+        {
+          "factor": "Depressed beat-to-beat variability (RMSSD ratio: 0.44)",
+          "count": 2899
+        },
+        {
+          "factor": "Depressed beat-to-beat variability (RMSSD ratio: 0.46)",
+          "count": 2844
+        }
+      ]
+    },
+    "DEGRADED_SIGNAL_QUALITY": {
+      "total_windows_evaluated": 43152,
+      "classification_counts": {
+        "NORMAL": 32104,
+        "INSUFFICIENT_DATA": 9853,
+        "FATIGUE": 1195
+      },
+      "classification_percentages": {
+        "NORMAL": 74.4,
+        "INSUFFICIENT_DATA": 22.83,
+        "FATIGUE": 2.77
+      },
+      "mean_confidence": 0.863,
+      "mean_sqi": 0.886,
+      "top_dominant_factors": [
+        {
+          "factor": "Positive baseline concordance: HR and RMSSD within nominal limits",
+          "count": 32104
+        },
+        {
+          "factor": "Evidence insufficient or unconfirmed for any operational state",
+          "count": 8764
+        },
+        {
+          "factor": "Confirmed benign flight phase (CRUISE)",
+          "count": 1195
+        },
+        {
+          "factor": "Physiological sensor channels unreliable or motion-corrupted",
+          "count": 929
+        },
+        {
+          "factor": "Confirmed low G-load (1.0g)",
+          "count": 498
+        }
+      ]
+    },
+    "MIXED_OPERATIONAL_CONDITIONS": {
+      "total_windows_evaluated": 43152,
+      "classification_counts": {
+        "FATIGUE": 6755,
+        "INSUFFICIENT_DATA": 10509,
+        "NORMAL": 12737,
+        "ELEVATED_WORKLOAD": 13151
+      },
+      "classification_percentages": {
+        "FATIGUE": 15.65,
+        "INSUFFICIENT_DATA": 24.35,
+        "NORMAL": 29.52,
+        "ELEVATED_WORKLOAD": 30.48
+      },
+      "mean_confidence": 0.937,
+      "mean_sqi": 0.997,
+      "top_dominant_factors": [
+        {
+          "factor": "Positive baseline concordance: HR and RMSSD within nominal limits",
+          "count": 12737
+        },
+        {
+          "factor": "High-workload flight phase (COMBAT_MANEUVER)",
+          "count": 8208
+        },
+        {
+          "factor": "Confirmed benign flight phase (CRUISE)",
+          "count": 6708
+        },
+        {
+          "factor": "Evidence insufficient or unconfirmed for any operational state",
+          "count": 5761
+        },
+        {
+          "factor": "Confirmed low G-load (1.0g)",
+          "count": 5062
+        }
+      ]
+    }
+  },
+  "representative_examples": {
+    "FATIGUE": {
+      "session_id": "SYN-S001",
+      "scenario": "NORMAL_BASELINE",
+      "timestamp": "2026-11-20T08:00:04+00:00",
+      "fatigue_state": "FATIGUE",
+      "confidence": 1.0,
+      "overall_sqi": 1.0,
+      "dominant_factors": [
+        "Depressed beat-to-beat variability (RMSSD ratio: 0.63)",
+        "Confirmed low G-load (1.0g)",
+        "Confirmed benign flight phase (CRUISE)"
+      ],
+      "baseline_version": "CAL-2026-001",
+      "estimator_id": "AeroVitalConfidenceEvaluator-v1.0"
+    },
+    "INSUFFICIENT_DATA": {
+      "session_id": "SYN-S001",
+      "scenario": "NORMAL_BASELINE",
+      "timestamp": "2026-11-20T08:00:07+00:00",
+      "fatigue_state": "INSUFFICIENT_DATA",
+      "confidence": 0.75,
+      "overall_sqi": 1.0,
+      "dominant_factors": [
+        "Evidence insufficient or unconfirmed for any operational state"
+      ],
+      "baseline_version": "CAL-2026-001",
+      "estimator_id": "AeroVitalConfidenceEvaluator-v1.0"
+    },
+    "NORMAL": {
+      "session_id": "SYN-S001",
+      "scenario": "NORMAL_BASELINE",
+      "timestamp": "2026-11-20T08:00:16+00:00",
+      "fatigue_state": "NORMAL",
+      "confidence": 1.0,
+      "overall_sqi": 1.0,
+      "dominant_factors": [
+        "Positive baseline concordance: HR and RMSSD within nominal limits"
+      ],
+      "baseline_version": "CAL-2026-001",
+      "estimator_id": "AeroVitalConfidenceEvaluator-v1.0"
+    },
+    "ELEVATED_WORKLOAD": {
+      "session_id": "SYN-S013",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "timestamp": "2026-11-26T08:00:04+00:00",
+      "fatigue_state": "ELEVATED_WORKLOAD",
+      "confidence": 1.0,
+      "overall_sqi": 1.0,
+      "dominant_factors": [
+        "Elevated heart rate (+20.4 BPM relative to baseline)",
+        "High-workload flight phase (CLIMB)"
+      ],
+      "baseline_version": "CAL-2026-007",
+      "estimator_id": "AeroVitalConfidenceEvaluator-v1.0"
+    }
+  },
+  "session_summaries": [
+    {
+      "session_id": "SYN-S001",
+      "participant_id": "SYN-P001",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3,
+        "INSUFFICIENT_DATA": 76,
+        "NORMAL": 3517
+      },
+      "mean_confidence": 0.994,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S002",
+      "participant_id": "SYN-P001",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 312,
+        "FATIGUE": 2,
+        "NORMAL": 3282
+      },
+      "mean_confidence": 0.978,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S003",
+      "participant_id": "SYN-P002",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3448,
+        "INSUFFICIENT_DATA": 148
+      },
+      "mean_confidence": 0.989,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S004",
+      "participant_id": "SYN-P002",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3489,
+        "INSUFFICIENT_DATA": 107
+      },
+      "mean_confidence": 0.992,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S005",
+      "participant_id": "SYN-P003",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3330,
+        "INSUFFICIENT_DATA": 266
+      },
+      "mean_confidence": 0.981,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S006",
+      "participant_id": "SYN-P003",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3434,
+        "INSUFFICIENT_DATA": 162
+      },
+      "mean_confidence": 0.988,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S007",
+      "participant_id": "SYN-P004",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3333,
+        "INSUFFICIENT_DATA": 263
+      },
+      "mean_confidence": 0.981,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S008",
+      "participant_id": "SYN-P004",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 18,
+        "INSUFFICIENT_DATA": 304,
+        "NORMAL": 3274
+      },
+      "mean_confidence": 0.978,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S009",
+      "participant_id": "SYN-P005",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 199,
+        "NORMAL": 3397
+      },
+      "mean_confidence": 0.985,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S010",
+      "participant_id": "SYN-P005",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3392,
+        "INSUFFICIENT_DATA": 201,
+        "FATIGUE": 3
+      },
+      "mean_confidence": 0.985,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S011",
+      "participant_id": "SYN-P006",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 3416,
+        "INSUFFICIENT_DATA": 180
+      },
+      "mean_confidence": 0.987,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S012",
+      "participant_id": "SYN-P006",
+      "scenario": "NORMAL_BASELINE",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 186,
+        "FATIGUE": 2,
+        "NORMAL": 3408
+      },
+      "mean_confidence": 0.986,
+      "mean_sqi": 0.999
+    },
+    {
+      "session_id": "SYN-S013",
+      "participant_id": "SYN-P007",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S014",
+      "participant_id": "SYN-P007",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S015",
+      "participant_id": "SYN-P008",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S016",
+      "participant_id": "SYN-P008",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S017",
+      "participant_id": "SYN-P009",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S018",
+      "participant_id": "SYN-P009",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S019",
+      "participant_id": "SYN-P010",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S020",
+      "participant_id": "SYN-P010",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S021",
+      "participant_id": "SYN-P011",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S022",
+      "participant_id": "SYN-P011",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S023",
+      "participant_id": "SYN-P012",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S024",
+      "participant_id": "SYN-P012",
+      "scenario": "ELEVATED_COGNITIVE_WORKLOAD",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "ELEVATED_WORKLOAD": 2396,
+        "FATIGUE": 1200
+      },
+      "mean_confidence": 0.997,
+      "mean_sqi": 0.996
+    },
+    {
+      "session_id": "SYN-S025",
+      "participant_id": "SYN-P013",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S026",
+      "participant_id": "SYN-P013",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S027",
+      "participant_id": "SYN-P014",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 6,
+        "FATIGUE": 3590
+      },
+      "mean_confidence": 0.998,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S028",
+      "participant_id": "SYN-P014",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S029",
+      "participant_id": "SYN-P015",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S030",
+      "participant_id": "SYN-P015",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S031",
+      "participant_id": "SYN-P016",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 6,
+        "FATIGUE": 3590
+      },
+      "mean_confidence": 0.998,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S032",
+      "participant_id": "SYN-P016",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S033",
+      "participant_id": "SYN-P017",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3595,
+        "INSUFFICIENT_DATA": 1
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S034",
+      "participant_id": "SYN-P017",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S035",
+      "participant_id": "SYN-P018",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S036",
+      "participant_id": "SYN-P018",
+      "scenario": "FATIGUE_PHYSIOLOGICAL",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 3596
+      },
+      "mean_confidence": 0.999,
+      "mean_sqi": 0.998
+    },
+    {
+      "session_id": "SYN-S037",
+      "participant_id": "SYN-P019",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 2633,
+        "INSUFFICIENT_DATA": 858,
+        "FATIGUE": 105
+      },
+      "mean_confidence": 0.858,
+      "mean_sqi": 0.89
+    },
+    {
+      "session_id": "SYN-S038",
+      "participant_id": "SYN-P019",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 94,
+        "NORMAL": 2695,
+        "INSUFFICIENT_DATA": 807
+      },
+      "mean_confidence": 0.87,
+      "mean_sqi": 0.893
+    },
+    {
+      "session_id": "SYN-S039",
+      "participant_id": "SYN-P020",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 831,
+        "NORMAL": 2687,
+        "FATIGUE": 78
+      },
+      "mean_confidence": 0.85,
+      "mean_sqi": 0.881
+    },
+    {
+      "session_id": "SYN-S040",
+      "participant_id": "SYN-P020",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 2467,
+        "INSUFFICIENT_DATA": 1053,
+        "FATIGUE": 76
+      },
+      "mean_confidence": 0.854,
+      "mean_sqi": 0.899
+    },
+    {
+      "session_id": "SYN-S041",
+      "participant_id": "SYN-P021",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 2851,
+        "INSUFFICIENT_DATA": 660,
+        "FATIGUE": 85
+      },
+      "mean_confidence": 0.889,
+      "mean_sqi": 0.901
+    },
+    {
+      "session_id": "SYN-S042",
+      "participant_id": "SYN-P021",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 619,
+        "FATIGUE": 152,
+        "NORMAL": 2825
+      },
+      "mean_confidence": 0.87,
+      "mean_sqi": 0.875
+    },
+    {
+      "session_id": "SYN-S043",
+      "participant_id": "SYN-P022",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 41,
+        "INSUFFICIENT_DATA": 949,
+        "NORMAL": 2606
+      },
+      "mean_confidence": 0.845,
+      "mean_sqi": 0.874
+    },
+    {
+      "session_id": "SYN-S044",
+      "participant_id": "SYN-P022",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 2766,
+        "INSUFFICIENT_DATA": 752,
+        "FATIGUE": 78
+      },
+      "mean_confidence": 0.884,
+      "mean_sqi": 0.908
+    },
+    {
+      "session_id": "SYN-S045",
+      "participant_id": "SYN-P023",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 761,
+        "FATIGUE": 59,
+        "NORMAL": 2776
+      },
+      "mean_confidence": 0.869,
+      "mean_sqi": 0.885
+    },
+    {
+      "session_id": "SYN-S046",
+      "participant_id": "SYN-P023",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 2667,
+        "INSUFFICIENT_DATA": 818,
+        "FATIGUE": 111
+      },
+      "mean_confidence": 0.877,
+      "mean_sqi": 0.901
+    },
+    {
+      "session_id": "SYN-S047",
+      "participant_id": "SYN-P024",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 934,
+        "FATIGUE": 186,
+        "NORMAL": 2476
+      },
+      "mean_confidence": 0.838,
+      "mean_sqi": 0.871
+    },
+    {
+      "session_id": "SYN-S048",
+      "participant_id": "SYN-P024",
+      "scenario": "DEGRADED_SIGNAL_QUALITY",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 811,
+        "FATIGUE": 130,
+        "NORMAL": 2655
+      },
+      "mean_confidence": 0.85,
+      "mean_sqi": 0.861
+    },
+    {
+      "session_id": "SYN-S049",
+      "participant_id": "SYN-P025",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 496,
+        "INSUFFICIENT_DATA": 936,
+        "NORMAL": 1022,
+        "ELEVATED_WORKLOAD": 1142
+      },
+      "mean_confidence": 0.933,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S050",
+      "participant_id": "SYN-P025",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 960,
+        "INSUFFICIENT_DATA": 1021,
+        "FATIGUE": 552,
+        "ELEVATED_WORKLOAD": 1063
+      },
+      "mean_confidence": 0.927,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S051",
+      "participant_id": "SYN-P026",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 530,
+        "INSUFFICIENT_DATA": 848,
+        "NORMAL": 1157,
+        "ELEVATED_WORKLOAD": 1061
+      },
+      "mean_confidence": 0.939,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S052",
+      "participant_id": "SYN-P026",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 1124,
+        "INSUFFICIENT_DATA": 900,
+        "ELEVATED_WORKLOAD": 1032,
+        "FATIGUE": 540
+      },
+      "mean_confidence": 0.936,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S053",
+      "participant_id": "SYN-P027",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 914,
+        "NORMAL": 1150,
+        "ELEVATED_WORKLOAD": 1093,
+        "FATIGUE": 439
+      },
+      "mean_confidence": 0.935,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S054",
+      "participant_id": "SYN-P027",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 822,
+        "NORMAL": 1042,
+        "ELEVATED_WORKLOAD": 1121,
+        "FATIGUE": 611
+      },
+      "mean_confidence": 0.941,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S055",
+      "participant_id": "SYN-P028",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 611,
+        "INSUFFICIENT_DATA": 878,
+        "NORMAL": 1042,
+        "ELEVATED_WORKLOAD": 1065
+      },
+      "mean_confidence": 0.937,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S056",
+      "participant_id": "SYN-P028",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "NORMAL": 1023,
+        "INSUFFICIENT_DATA": 969,
+        "ELEVATED_WORKLOAD": 1101,
+        "FATIGUE": 503
+      },
+      "mean_confidence": 0.931,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S057",
+      "participant_id": "SYN-P029",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 662,
+        "INSUFFICIENT_DATA": 850,
+        "NORMAL": 1041,
+        "ELEVATED_WORKLOAD": 1043
+      },
+      "mean_confidence": 0.939,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S058",
+      "participant_id": "SYN-P029",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 894,
+        "NORMAL": 1061,
+        "ELEVATED_WORKLOAD": 1105,
+        "FATIGUE": 536
+      },
+      "mean_confidence": 0.936,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S059",
+      "participant_id": "SYN-P030",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "FATIGUE": 632,
+        "INSUFFICIENT_DATA": 730,
+        "NORMAL": 1077,
+        "ELEVATED_WORKLOAD": 1157
+      },
+      "mean_confidence": 0.947,
+      "mean_sqi": 0.997
+    },
+    {
+      "session_id": "SYN-S060",
+      "participant_id": "SYN-P030",
+      "scenario": "MIXED_OPERATIONAL_CONDITIONS",
+      "evaluated_windows": 3596,
+      "state_breakdown": {
+        "INSUFFICIENT_DATA": 747,
+        "NORMAL": 1038,
+        "ELEVATED_WORKLOAD": 1168,
+        "FATIGUE": 643
+      },
+      "mean_confidence": 0.946,
+      "mean_sqi": 0.997
+    }
+  ]
+}

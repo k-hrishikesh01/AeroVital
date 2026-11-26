@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AeroVital — Flight Biometrics & Fatigue Intelligence Dashboard</title>
     <meta name="description" content="AeroVital mission-critical aeromedical flight biometrics and pilot vitality monitoring dashboard powered by AeroVital Core and Django REST API." />
+    <!-- MANDATORY: Declare support for both light and dark themes to prevent FOUC -->
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function() {
+        try {
+          var pref = localStorage.getItem('aerovital_theme_preference') || localStorage.getItem('aerovital_theme') || 'system';
+          var isDark = pref === 'dark' || (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var resolved = isDark ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', resolved);
+          var meta = document.querySelector('meta[name="color-scheme"]');
+          if (meta) meta.content = pref === 'system' ? 'light dark' : resolved;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

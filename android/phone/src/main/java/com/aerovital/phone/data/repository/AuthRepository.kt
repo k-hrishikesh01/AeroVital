@@ -9,9 +9,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.io.IOException
 
 class AuthRepository(
-    private val authApi: AuthApi,
+    private val authApiProvider: () -> AuthApi,
     private val tokenManager: TokenManager
 ) {
+    // Secondary constructor for backward compatibility with unit tests
+    constructor(authApi: AuthApi, tokenManager: TokenManager) : this({ authApi }, tokenManager)
+
+    private val authApi: AuthApi get() = authApiProvider()
+
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
@@ -21,9 +26,6 @@ class AuthRepository(
 
     private fun checkExistingSession() {
         if (tokenManager.getToken() != null) {
-            // We have a token, but we don't have the user profile in memory yet.
-            // A realistic implementation would either store it locally or fetch it.
-            // For now, we transition to Authenticating and fetch /me.
             _authState.value = AuthState.Authenticating
         } else {
             _authState.value = AuthState.Unauthenticated
@@ -32,6 +34,7 @@ class AuthRepository(
 
     suspend fun login(request: AuthRequest) {
         _authState.value = AuthState.Authenticating
+        tokenManager.clearToken()
         try {
             val response = authApi.login(request)
             if (response.isSuccessful) {
@@ -39,7 +42,7 @@ class AuthRepository(
                 if (body != null) {
                     tokenManager.saveToken(body.token)
                     _authState.value = AuthState.Authenticated(
-                        username = body.username,
+                        username = body.username ?: request.username,
                         pilot = body.pilot
                     )
                 } else {
@@ -48,7 +51,6 @@ class AuthRepository(
             } else {
                 when (response.code()) {
                     400 -> {
-                        // Attempt to extract meaningful error message, fallback to generic
                         val errorString = response.errorBody()?.string() ?: "Bad request"
                         _authState.value = AuthState.Error(errorString, ErrorType.UNKNOWN)
                     }
@@ -83,7 +85,6 @@ class AuthRepository(
                 handleUnauthorized()
             }
         } catch (e: IOException) {
-            // In a real app we might stay in a "cached authenticated" state, but per rules:
             _authState.value = AuthState.Error("Network failure fetching profile", ErrorType.NETWORK_FAILURE)
         } catch (e: Exception) {
             _authState.value = AuthState.Error(e.message ?: "Unknown error", ErrorType.UNKNOWN)

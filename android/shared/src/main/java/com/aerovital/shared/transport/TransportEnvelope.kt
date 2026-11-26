@@ -9,13 +9,18 @@ data class TransportEnvelope(
     @SerializedName("timestamp") val timestamp: Long,
     @SerializedName("payloadType") val payloadType: String,
     @SerializedName("payload") val payload: String,
-    @SerializedName("sequenceNumber") val sequenceNumber: Long? = null
+    @SerializedName("sequenceNumber") val sequenceNumber: Long? = null,
+    @SerializedName("batchId") val batchId: String? = null
 ) {
     companion object {
         const val CURRENT_VERSION = 1
         
         const val PAYLOAD_TYPE_TEST = "TEST"
         const val PAYLOAD_TYPE_TELEMETRY = "PHYSIOLOGICAL_TELEMETRY" // Reserved for A3/A4
+        const val PAYLOAD_TYPE_TELEMETRY_BATCH = "PHYSIOLOGICAL_TELEMETRY_BATCH"
+
+        const val TELEMETRY_PATH = "/aerovital/telemetry/v1"
+        const val ACK_PATH = "/aerovital/telemetry/ack/v1"
         
         // Envelope validation rules
         fun validate(envelope: TransportEnvelope, currentTimeMillis: Long): TransportResult<TransportEnvelope> {
@@ -36,7 +41,9 @@ data class TransportEnvelope(
             }
             
             // Payload type verification
-            if (envelope.payloadType != PAYLOAD_TYPE_TEST && envelope.payloadType != PAYLOAD_TYPE_TELEMETRY) {
+            if (envelope.payloadType != PAYLOAD_TYPE_TEST &&
+                envelope.payloadType != PAYLOAD_TYPE_TELEMETRY &&
+                envelope.payloadType != PAYLOAD_TYPE_TELEMETRY_BATCH) {
                 return TransportResult.Error(ErrorReason.UNKNOWN_PAYLOAD_TYPE, "Unknown payload type: ${envelope.payloadType}")
             }
             

@@ -12,6 +12,7 @@ import com.aerovital.phone.queue.TelemetryDeliveryCoordinator
 import com.aerovital.phone.queue.TelemetryQueue
 import com.aerovital.phone.transport.WearTransportReceiver
 import com.aerovital.shared.telemetry.toCanonicalTelemetry
+import com.aerovital.shared.transport.TelemetryBatch
 import com.aerovital.shared.transport.TransportEnvelope
 import com.aerovital.shared.transport.TransportResult
 
@@ -50,6 +51,10 @@ class PhoneTelemetryIngestionHandler(
      * 4. Triggers delivery worker to dispatch pending records to Django
      */
     suspend fun handleEnvelope(envelope: TransportEnvelope): TelemetryIngestResult {
+        if (envelope.payloadType == TransportEnvelope.PAYLOAD_TYPE_TELEMETRY_BATCH) {
+            return handleBatchEnvelope(envelope)
+        }
+
         if (envelope.payloadType != TransportEnvelope.PAYLOAD_TYPE_TELEMETRY) {
             return TelemetryIngestResult.MalformedPayloadError(
                 "Envelope payloadType '${envelope.payloadType}' does not match expected '${TransportEnvelope.PAYLOAD_TYPE_TELEMETRY}'"
@@ -92,6 +97,45 @@ class PhoneTelemetryIngestionHandler(
         }
 
         // Only after durable persistence, attempt delivery
+        val drainSummary = deliveryCoordinator.drainQueue()
+        return drainSummary.lastResult ?: TelemetryIngestResult.Success(201, null)
+    }
+
+    /**
+     * Ingests a batched TelemetryEnvelope containing multiple CanonicalTelemetry samples.
+     * Enqueues each individual sample durably into the queue before attempting delivery.
+     */
+    suspend fun handleBatchEnvelope(envelope: TransportEnvelope): TelemetryIngestResult {
+        val batch = TelemetryBatch.fromJson(envelope.payload)
+            ?: return TelemetryIngestResult.MalformedPayloadError(
+                "Failed to deserialize TelemetryBatch from payload (messageId=${envelope.messageId})"
+            )
+
+        if (batch.samples.isEmpty()) {
+            return TelemetryIngestResult.MalformedPayloadError("TelemetryBatch contains no samples (messageId=${envelope.messageId})")
+        }
+
+        for ((index, sample) in batch.samples.withIndex()) {
+            if (sample.timestamp.isBlank()) {
+                return TelemetryIngestResult.MalformedPayloadError(
+                    "Sample #$index timestamp cannot be blank in batch ${envelope.messageId}"
+                )
+            }
+            val sampleEnvelope = sample.toTransportEnvelope(
+                deviceId = envelope.deviceId,
+                messageId = "${envelope.messageId}_$index",
+                timestampEpochMs = envelope.timestamp,
+                sequenceNumber = envelope.sequenceNumber?.let { it * 1000L + index }
+            )
+            val enqueueResult = queue.enqueue(sampleEnvelope)
+            if (enqueueResult is EnqueueResult.QueueFull) {
+                return TelemetryIngestResult.ServerError(
+                    statusCode = 507,
+                    message = "Queue full (capacity ${enqueueResult.capacity})"
+                )
+            }
+        }
+
         val drainSummary = deliveryCoordinator.drainQueue()
         return drainSummary.lastResult ?: TelemetryIngestResult.Success(201, null)
     }

@@ -1,113 +1,262 @@
 /* ==========================================================================
-   AEROVITAL - Global Design System & Aerospace Theme Tokens
-   Predominantly Monochrome (Black & White) with Restrained Indian Tricolour Accents
+   AEROVITAL — HYBRID AVIATION + CLINICAL INTELLIGENCE DESIGN SYSTEM
+   Central Design Tokens: Monochrome Aviation Identity & Adaptive Theming
    ========================================================================== */
 
 :root {
-  /* Brand Identity: Indian Tricolour Accents (Restrained brand signature) */
-  --brand-saffron: #FF9933;
+  color-scheme: light dark;
+
+  /* Brand Signature: Restrained Aviation & National Tricolour Accent */
+  --brand-saffron: #F97316;
   --brand-white: #FFFFFF;
-  --brand-green: #138808;
-  --brand-saffron-tint: rgba(255, 153, 51, 0.12);
-  --brand-green-tint: rgba(19, 136, 8, 0.12);
-  --brand-tricolour-bar: linear-gradient(90deg, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%);
-  --brand-tricolour-soft: linear-gradient(90deg, rgba(255, 153, 51, 0.8) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(19, 136, 8, 0.8) 100%);
+  --brand-green: #10B981;
+  --brand-saffron-tint: rgba(249, 115, 22, 0.12);
+  --brand-green-tint: rgba(16, 185, 129, 0.12);
+  --brand-tricolour-bar: linear-gradient(90deg, #F97316 0%, #F97316 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #10B981 66.6%, #10B981 100%);
+  --brand-tricolour-soft: linear-gradient(90deg, rgba(249, 115, 22, 0.7) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(16, 185, 129, 0.7) 100%);
 
-  /* Light Theme (Aviation Precision Clean Daylight Mode) */
-  --bg-app: #F6F7F9;
-  --bg-secondary: #EDEFF2;
+  /* Default Light Mode: High-Clarity Crisp White Surfaces & Charcoal Typography */
+  --bg-app: #F9FAFB;
+  --bg-secondary: #F3F4F6;
   --bg-card: #FFFFFF;
-  --bg-card-tinted: #F4F4F4;
-  --bg-card-hover: #EAEAEA;
-  --surface-elevated: #F4F4F4;
+  --bg-card-elevated: #FFFFFF;
+  --bg-card-tinted: #F9FAFB;
+  --bg-card-hover: #F3F4F6;
+  --bg-hover: #F3F4F6;
+  --surface-elevated: #FFFFFF;
+  --surface-overlay: rgba(17, 24, 39, 0.5);
 
-  --text-primary: #111111;
-  --text-secondary: #555555;
-  --text-muted: #888888;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
   --text-inverted: #FFFFFF;
 
-  --border-light: #DDDDDD;
-  --border-subtle: #EAEAEA;
-  --border-focus: #111111;
-  --border-input: #CCCCCC;
-  --border-card-tint: rgba(0, 0, 0, 0.05);
+  --border-subtle: #E5E7EB;
+  --border-light: #D1D5DB;
+  --border-medium: #9CA3AF;
+  --border-focus: #111827;
+  --border-input: #D1D5DB;
+  --border-card-tint: rgba(0, 0, 0, 0.04);
 
-  --btn-primary-bg: #111111;
+  --btn-primary-bg: #111827;
   --btn-primary-text: #FFFFFF;
-  --btn-primary-hover: #262626;
+  --btn-primary-hover: #1F2937;
 
-  /* Primary accent (Clean Monochrome) */
-  --primary-navy: #111111;
-  --primary-navy-hover: #262626;
-  --primary-navy-active: #000000;
-  --primary-navy-tint: rgba(0, 0, 0, 0.06);
+  /* Functional Accents */
+  --color-clinical-blue: #2563EB;
+  --color-clinical-blue-hover: #1D4ED8;
+  --color-clinical-blue-tint: rgba(37, 99, 235, 0.08);
+  --color-analytical-teal: #0D9488;
+  --color-analytical-teal-tint: rgba(13, 148, 136, 0.08);
 
-  /* Operational Semantic Status Tokens (Preserved for flight safety clarity) */
+  /* Preserved aliases for existing components */
+  --primary-navy: #111827;
+  --primary-navy-hover: #1F2937;
+  --primary-navy-active: #374151;
+  --primary-navy-tint: rgba(17, 24, 39, 0.06);
+
+  /* Operational Semantic Physiological States (WCAG AA Compliant) */
   --color-normal: #10B981;
   --color-normal-bg: rgba(16, 185, 129, 0.12);
   --color-warning: #F59E0B;
-  --color-warning-bg: rgba(245, 158, 11, 0.14);
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
   --color-alert: #EF4444;
-  --color-alert-bg: rgba(239, 68, 68, 0.14);
-  --color-cyan: #06B6D4;
+  --color-alert-bg: rgba(239, 68, 68, 0.12);
+  --color-insufficient: #6B7280;
+  --color-insufficient-bg: rgba(107, 114, 128, 0.12);
+  --color-cyan: #0284C7;
+  --color-cyan-bg: rgba(2, 132, 199, 0.10);
   --color-purple: #8B5CF6;
-  --color-insufficient: #71717A;
-  --color-insufficient-bg: rgba(113, 113, 122, 0.14);
+  --color-purple-bg: rgba(139, 92, 246, 0.10);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 2px 8px -1px rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
-  
+  /* Chart Palettes (Light Mode) */
+  --chart-hr: #EF4444;
+  --chart-rr: #2563EB;
+  --chart-sqi: #10B981;
+  --chart-accel: #8B5CF6;
+  --chart-grid: #E5E7EB;
+  --chart-axis: #6B7280;
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-border: #D1D5DB;
+
+  /* Elevation: Clean Borders and Precision Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+  /* Geometry & Typography Tokens */
+  --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
   --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, Monaco, monospace;
   --transition-fast: 0.15s ease;
-  --transition-smooth: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Cockpit Night Vision / Aerospace Dark HUD Theme (Default Aerospace Presentation) */
+/* Explicit Light Mode Override */
+:root[data-theme="light"],
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  color-scheme: light;
+}
+
+/* Dark Mode: Monochrome Charcoal Cockpit HUD Surfaces */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #090A0C;
+    --bg-secondary: #121316;
+    --bg-card: #121316;
+    --bg-card-elevated: #181A1E;
+    --bg-card-tinted: #14161A;
+    --bg-card-hover: #1E2025;
+    --bg-hover: #1E2025;
+    --surface-elevated: #181A1E;
+    --surface-overlay: rgba(0, 0, 0, 0.80);
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --text-inverted: #090A0C;
+
+    --border-subtle: #26282C;
+    --border-light: #374151;
+    --border-medium: #4B5563;
+    --border-focus: #FFFFFF;
+    --border-input: #26282C;
+    --border-card-tint: rgba(255, 255, 255, 0.04);
+
+    --btn-primary-bg: #FFFFFF;
+    --btn-primary-text: #090A0C;
+    --btn-primary-hover: #E5E7EB;
+
+    --color-clinical-blue: #38BDF8;
+    --color-clinical-blue-hover: #7DD3FC;
+    --color-clinical-blue-tint: rgba(56, 189, 248, 0.10);
+    --color-analytical-teal: #2DD4BF;
+    --color-analytical-teal-tint: rgba(45, 212, 191, 0.10);
+
+    --primary-navy: #FFFFFF;
+    --primary-navy-hover: #E5E7EB;
+    --primary-navy-active: #D1D5DB;
+    --primary-navy-tint: rgba(255, 255, 255, 0.08);
+
+    --color-normal: #10B981;
+    --color-normal-bg: rgba(16, 185, 129, 0.14);
+    --color-warning: #F59E0B;
+    --color-warning-bg: rgba(245, 158, 11, 0.14);
+    --color-alert: #EF4444;
+    --color-alert-bg: rgba(239, 68, 68, 0.14);
+    --color-insufficient: #6B7280;
+    --color-insufficient-bg: rgba(107, 114, 128, 0.14);
+    --color-cyan: #38BDF8;
+    --color-cyan-bg: rgba(56, 189, 248, 0.12);
+    --color-purple: #A78BFA;
+    --color-purple-bg: rgba(167, 139, 250, 0.12);
+
+    /* Chart Palettes (Dark Mode) */
+    --chart-hr: #EF4444;
+    --chart-rr: #38BDF8;
+    --chart-sqi: #10B981;
+    --chart-accel: #A78BFA;
+    --chart-grid: #26282C;
+    --chart-axis: #6B7280;
+    --chart-tooltip-bg: #121316;
+    --chart-tooltip-border: #374151;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.55), 0 1px 2px -1px rgba(0, 0, 0, 0.40);
+    --shadow-lg: 0 12px 28px -5px rgba(0, 0, 0, 0.75), 0 8px 10px -6px rgba(0, 0, 0, 0.60);
+  }
+}
+
+/* Explicit Dark Mode Overrides (via data-theme, body.dark-theme, or meta[content="dark"]) */
+:root[data-theme="dark"],
+:root:has(> head > meta[name="color-scheme"][content="dark"]),
 body.dark-theme {
-  --bg-app: #050505;
-  --bg-secondary: #0D0D0D;
-  --bg-card: #111111;
-  --bg-card-tinted: #181818;
-  --bg-card-hover: #1E1E1E;
-  --surface-elevated: #181818;
+  color-scheme: dark;
+
+  --bg-app: #090A0C;
+  --bg-secondary: #121316;
+  --bg-card: #121316;
+  --bg-card-elevated: #181A1E;
+  --bg-card-tinted: #14161A;
+  --bg-card-hover: #1E2025;
+  --bg-hover: #1E2025;
+  --surface-elevated: #181A1E;
+  --surface-overlay: rgba(0, 0, 0, 0.80);
 
   --text-primary: #FFFFFF;
-  --text-secondary: #B5B5B5;
-  --text-muted: #737373;
-  --text-inverted: #0A0A0A;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --text-inverted: #090A0C;
 
-  --border-light: #303030;
-  --border-subtle: #202020;
+  --border-subtle: #26282C;
+  --border-light: #374151;
+  --border-medium: #4B5563;
   --border-focus: #FFFFFF;
-  --border-input: #383838;
-  --border-card-tint: rgba(255, 255, 255, 0.06);
+  --border-input: #26282C;
+  --border-card-tint: rgba(255, 255, 255, 0.04);
 
   --btn-primary-bg: #FFFFFF;
-  --btn-primary-text: #050505;
-  --btn-primary-hover: #E5E5E5;
+  --btn-primary-text: #090A0C;
+  --btn-primary-hover: #E5E7EB;
+
+  --color-clinical-blue: #38BDF8;
+  --color-clinical-blue-hover: #7DD3FC;
+  --color-clinical-blue-tint: rgba(56, 189, 248, 0.10);
+  --color-analytical-teal: #2DD4BF;
+  --color-analytical-teal-tint: rgba(45, 212, 191, 0.10);
 
   --primary-navy: #FFFFFF;
-  --primary-navy-hover: #E5E5E5;
-  --primary-navy-active: #CCCCCC;
-  --primary-navy-tint: rgba(255, 255, 255, 0.1);
+  --primary-navy-hover: #E5E7EB;
+  --primary-navy-active: #D1D5DB;
+  --primary-navy-tint: rgba(255, 255, 255, 0.08);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.7);
-  --shadow-lg: 0 16px 36px -4px rgba(0, 0, 0, 0.9);
+  --color-normal: #10B981;
+  --color-normal-bg: rgba(16, 185, 129, 0.14);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.14);
+  --color-alert: #EF4444;
+  --color-alert-bg: rgba(239, 68, 68, 0.14);
+  --color-insufficient: #6B7280;
+  --color-insufficient-bg: rgba(107, 114, 128, 0.14);
+  --color-cyan: #38BDF8;
+  --color-cyan-bg: rgba(56, 189, 248, 0.12);
+  --color-purple: #A78BFA;
+  --color-purple-bg: rgba(167, 139, 250, 0.12);
+
+  /* Chart Palettes (Dark Mode) */
+  --chart-hr: #EF4444;
+  --chart-rr: #38BDF8;
+  --chart-sqi: #10B981;
+  --chart-accel: #A78BFA;
+  --chart-grid: #26282C;
+  --chart-axis: #6B7280;
+  --chart-tooltip-bg: #121316;
+  --chart-tooltip-border: #374151;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.55), 0 1px 2px -1px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 12px 28px -5px rgba(0, 0, 0, 0.75), 0 8px 10px -6px rgba(0, 0, 0, 0.60);
 }
 
+/* Global Reset & Base Styles */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  font-family: var(--font-main);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  accent-color: var(--text-primary);
+  scrollbar-color: var(--border-medium) var(--bg-secondary);
 }
 
 body {
@@ -122,7 +271,7 @@ body {
   min-height: 100vh;
 }
 
-/* Tabular numbers for telemetry instruments */
+/* Tabular Numbers for Aerospace Instruments */
 .mono-num {
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
@@ -130,7 +279,7 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Scrollbars */
+/* Standard Accessible Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -146,5 +295,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--border-medium);
+}
+
+/* Focus styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }

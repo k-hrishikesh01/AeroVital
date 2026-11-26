@@ -5,26 +5,28 @@ import android.util.Log
 import com.aerovital.phone.BuildConfig
 
 /**
- * Manages development-time backend configuration for physical and emulator environments.
+ * Manages centrally configured backend endpoints for standalone production operation
+ * and development-time testing.
  *
- * Provides safe configuration for connecting to local Django development backends:
+ * Production Base URL:
+ * - https://aerovital-api.onrender.com/ (AeroVital Deployed Django REST API)
+ *
+ * Optional Local Development Overrides:
+ * - Physical Phone via ADB Reverse: http://127.0.0.1:8000/
  * - Android Emulator: http://10.0.2.2:8000/
- * - Physical Phone via ADB Reverse (adb reverse tcp:8000 tcp:8000): http://127.0.0.1:8000/
- * - Physical Phone via Wi-Fi LAN: http://<dev-machine-ip>:8000/
- *
- * Keeps credentials completely outside source code and isolates development endpoints
- * from production architectures.
  */
 object DevBackendConfig {
     private const val TAG = "DevBackendConfig"
     private const val PREFS_NAME = "aerovital_dev_config"
     private const val KEY_BASE_URL = "backend_base_url"
 
+    const val PRODUCTION_API_URL = "https://aerovital-api.onrender.com/"
     const val DEFAULT_EMULATOR_URL = "http://10.0.2.2:8000/"
     const val DEFAULT_ADB_REVERSE_URL = "http://127.0.0.1:8000/"
 
     /**
      * Initializes ApiClient.BASE_URL from persistent storage on application startup.
+     * Defaults to the production deployed Django REST API.
      */
     fun init(context: Context) {
         val configuredUrl = getBaseUrl(context)
@@ -35,11 +37,11 @@ object DevBackendConfig {
     }
 
     /**
-     * Retrieves the currently configured backend base URL.
+     * Retrieves the currently configured backend base URL, defaulting to production.
      */
     fun getBaseUrl(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_BASE_URL, DEFAULT_EMULATOR_URL) ?: DEFAULT_EMULATOR_URL
+        return prefs.getString(KEY_BASE_URL, PRODUCTION_API_URL) ?: PRODUCTION_API_URL
     }
 
     /**
@@ -58,10 +60,10 @@ object DevBackendConfig {
     }
 
     /**
-     * Resets the configuration to the default emulator base URL.
+     * Resets the configuration to the production API base URL.
      */
     fun resetToDefault(context: Context) {
-        setBaseUrl(context, DEFAULT_EMULATOR_URL)
+        setBaseUrl(context, PRODUCTION_API_URL)
     }
 
     /**

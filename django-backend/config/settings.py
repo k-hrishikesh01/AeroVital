@@ -28,7 +28,7 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
+    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,testserver,aerovital-api.onrender.com,.onrender.com").split(",")
     if host.strip()
 ]
 
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "telemetry",
     "intelligence",
     "alerts",
+    "research",
 ]
 
 MIDDLEWARE = [
@@ -100,16 +101,31 @@ if _use_sqlite or _db_engine in ("sqlite", "sqlite3"):
         }
     }
 else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "aerovital"),
-            "USER": os.getenv("POSTGRES_USER", "postgres"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        import urllib.parse
+        url = urllib.parse.urlparse(database_url)
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": url.path.lstrip("/"),
+                "USER": url.username or "",
+                "PASSWORD": url.password or "",
+                "HOST": url.hostname or "localhost",
+                "PORT": str(url.port or "5432"),
+            }
         }
-    }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.getenv("POSTGRES_DB", "aerovital"),
+                "USER": os.getenv("POSTGRES_USER", "postgres"),
+                "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+                "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+                "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            }
+        }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -159,7 +175,7 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000",
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,https://aerovital-dashboard.onrender.com",
     ).split(",")
     if origin.strip()
 ]

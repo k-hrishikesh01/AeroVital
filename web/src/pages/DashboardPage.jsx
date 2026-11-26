@@ -13,7 +13,12 @@ import AlertsDrawer from '../components/AlertsDrawer';
 import PilotProfileModal from '../components/PilotProfileModal';
 import ECGStatusPanel from '../components/DemoECGPanel';
 
-export function DashboardPage() {
+export function DashboardPage({
+  currentView = 'cockpit',
+  onSelectView,
+  theme: propTheme,
+  onToggleTheme: propToggleTheme,
+} = {}) {
   const {
     currentState,
     latestTelemetry,
@@ -33,20 +38,22 @@ export function DashboardPage() {
     refetch,
   } = useDashboardData();
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('aerovital_theme') || 'dark');
+  const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('aerovital_theme') || 'dark');
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  const activeTheme = propTheme || localTheme;
+
   // Apply theme to body
   useEffect(() => {
-    if (theme === 'dark') {
+    if (activeTheme === 'dark') {
       document.body.classList.add('dark-theme');
     } else {
       document.body.classList.remove('dark-theme');
     }
-    localStorage.setItem('aerovital_theme', theme);
-  }, [theme]);
+    localStorage.setItem('aerovital_theme', activeTheme);
+  }, [activeTheme]);
 
   // Apply mobile preview mode to body
   useEffect(() => {
@@ -57,34 +64,38 @@ export function DashboardPage() {
     }
   }, [isMobilePreview]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  const handleToggleTheme = () => {
+    if (propToggleTheme) {
+      propToggleTheme();
+    } else {
+      setLocalTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    }
   };
 
   const toggleMobilePreview = () => {
-    setIsMobilePreview(prev => !prev);
+    setIsMobilePreview((prev) => !prev);
   };
 
-  const activeMission = (currentState?.mission?.status === 'ACTIVE' ? currentState.mission : null)
-    || (missions && missions.find(m => m.status === 'ACTIVE' && (!m.end_time || new Date(m.end_time) > new Date())))
-    || null;
-  const currentBpm = (currentState?.latest_heart_rate !== undefined && currentState?.latest_heart_rate !== null)
-    ? Math.round(currentState.latest_heart_rate)
-    : (latestTelemetry?.heart_rate ? Math.round(latestTelemetry.heart_rate) : null);
+  const activeMission =
+    (currentState?.mission?.status === 'ACTIVE' ? currentState.mission : null) ||
+    (missions && missions.find((m) => m.status === 'ACTIVE' && (!m.end_time || new Date(m.end_time) > new Date()))) ||
+    null;
 
   return (
     <div className="app-layout">
-      {/* Header */}
+      {/* Aviation Command Header */}
       <Header
         liveStatus={liveStatus}
         mission={activeMission}
         alertCount={alerts.length}
         onOpenAlerts={() => setIsAlertsOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        theme={theme}
-        onToggleTheme={toggleTheme}
+        theme={activeTheme}
+        onToggleTheme={handleToggleTheme}
         isMobilePreview={isMobilePreview}
         onToggleMobilePreview={toggleMobilePreview}
+        currentView={currentView}
+        onSelectView={onSelectView}
       />
 
       {/* Connectivity & Operational Banner */}

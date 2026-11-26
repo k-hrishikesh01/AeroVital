@@ -14,6 +14,7 @@ v1_patterns = [
     path("telemetry/", include("telemetry.urls")),
     path("intelligence/", include("intelligence.urls")),
     path("alerts/", include("alerts.urls")),
+    path("research/", include("research.urls")),
 ]
 
 urlpatterns = [

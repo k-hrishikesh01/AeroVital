@@ -25,16 +25,17 @@ class DevBackendConfigTest {
     }
 
     @Test
-    fun `default backend URL is emulator 10_0_2_2 and free of hardcoded LAN addresses`() {
+    fun `default backend URL is production Render API and free of hardcoded LAN addresses`() {
+        assertEquals("https://aerovital-api.onrender.com/", DevBackendConfig.PRODUCTION_API_URL)
         assertEquals("http://10.0.2.2:8000/", DevBackendConfig.DEFAULT_EMULATOR_URL)
         assertEquals("http://127.0.0.1:8000/", DevBackendConfig.DEFAULT_ADB_REVERSE_URL)
 
-        // Verify defaults contain no physical LAN IPs (e.g. 192.168.x.x, 10.x.x.x other than loopback)
-        assertFalse(DevBackendConfig.DEFAULT_EMULATOR_URL.contains("192.168."))
-        assertFalse(DevBackendConfig.DEFAULT_ADB_REVERSE_URL.contains("192.168."))
+        // Verify production URL points to verified cloud backend
+        assertTrue(DevBackendConfig.PRODUCTION_API_URL.startsWith("https://"))
+        assertFalse(DevBackendConfig.PRODUCTION_API_URL.contains("localhost"))
 
         DevBackendConfig.init(fakeContext)
-        assertEquals("http://10.0.2.2:8000/", ApiClient.BASE_URL)
+        assertEquals("https://aerovital-api.onrender.com/", ApiClient.BASE_URL)
     }
 
     @Test
@@ -46,18 +47,18 @@ class DevBackendConfigTest {
     }
 
     @Test
-    fun `resetToDefault restores emulator URL`() {
+    fun `resetToDefault restores production URL`() {
         DevBackendConfig.setBaseUrl(fakeContext, "http://192.168.1.100:8000/")
         assertEquals("http://192.168.1.100:8000/", ApiClient.BASE_URL)
 
         DevBackendConfig.resetToDefault(fakeContext)
-        assertEquals("http://10.0.2.2:8000/", ApiClient.BASE_URL)
-        assertEquals("http://10.0.2.2:8000/", DevBackendConfig.getBaseUrl(fakeContext))
+        assertEquals("https://aerovital-api.onrender.com/", ApiClient.BASE_URL)
+        assertEquals("https://aerovital-api.onrender.com/", DevBackendConfig.getBaseUrl(fakeContext))
     }
 
     @Test
     fun `normalizeUrl trims whitespace and ensures trailing slash`() {
-        assertEquals("http://localhost:8000/", DevBackendConfig.normalizeUrl("  http://localhost:8000  "))
+        assertEquals("https://aerovital-api.onrender.com/", DevBackendConfig.normalizeUrl("  https://aerovital-api.onrender.com  "))
         assertEquals("http://localhost:8000/", DevBackendConfig.normalizeUrl("http://localhost:8000/"))
     }
 }
