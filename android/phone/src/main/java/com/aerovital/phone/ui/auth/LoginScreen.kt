@@ -39,7 +39,7 @@ fun LoginScreen(
     val scrollState = rememberScrollState()
 
     var username by remember { mutableStateOf("demo_researcher") }
-    var password by remember { mutableStateOf("AeroVital2026!") }
+    var password by remember { mutableStateOf("") }
     var currentUrl by remember { mutableStateOf(DevBackendConfig.getBaseUrl(context)) }
 
     LaunchedEffect(state) {
