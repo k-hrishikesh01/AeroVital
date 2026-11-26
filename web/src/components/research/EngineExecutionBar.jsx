@@ -48,6 +48,7 @@ export function EngineExecutionBar({
 
         {/* Presentation Mode Toggle */}
         <button
+          type="button"
           className="btn-secondary presentation-mode-btn"
           onClick={onOpenPresentation}
           title="Launch Fullscreen 5-Scenario Research Demonstration Mode"
@@ -57,7 +58,11 @@ export function EngineExecutionBar({
             fontWeight: 700,
           }}
         >
-          <span>📊 Presentation Mode</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="14" rx="2" />
+            <path d="M8 21h8M12 17v4" />
+          </svg>
+          <span>Presentation Mode</span>
         </button>
 
         {/* Consolidated Run History & Compare Runs */}

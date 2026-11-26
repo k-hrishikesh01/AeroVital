@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth';
 import BrandLogo from '../components/common/BrandLogo';
+import AppearanceSelector from '../components/common/AppearanceSelector';
 
 export function LoginPage() {
   const { login, isLoading, authError } = useAuth();
@@ -26,7 +27,10 @@ export function LoginPage() {
 
   return (
     <div className="login-wrapper">
-      <div className="login-card">
+      <div className="login-card" style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+          <AppearanceSelector />
+        </div>
         {/* Subtle Tricolour Accent Line at the top of the card */}
         <div
           className="card-tricolour-accent"

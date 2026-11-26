@@ -38,17 +38,17 @@ export function ResearchExportModal({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-container research-export-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="modal-backdrop active research-modal-backdrop" onClick={onClose}>
+      <div className="research-modal-container research-export-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-research">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="research-badge-accent">DATA EXPORT</span>
             <h3>Export Research Session Data</h3>
           </div>
-          <button className="btn-icon close-btn" onClick={onClose}>&times;</button>
+          <button type="button" className="btn-icon close-btn" onClick={onClose} aria-label="Close modal">&times;</button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body-research">
           <div className="export-session-summary">
             <div>
               <span className="lbl">Session Identifier:</span>
@@ -112,11 +112,11 @@ export function ResearchExportModal({
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose} disabled={isExporting}>
+        <div className="modal-footer-research">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={isExporting}>
             Cancel
           </button>
-          <button className="btn-primary" onClick={handleDownload} disabled={isExporting}>
+          <button type="button" className="btn-primary" onClick={handleDownload} disabled={isExporting}>
             {isExporting ? 'Preparing Download...' : `Download ${format.toUpperCase()}`}
           </button>
         </div>

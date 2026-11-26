@@ -33,14 +33,15 @@ export function CurrentStateCard({ currentState }) {
         </article>
 
         <article className="score-card" aria-label="Estimation Confidence">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className="card-label">Confidence</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+            <span className="card-label" style={{ marginBottom: 0 }}>Confidence</span>
             <span
               style={{
                 fontSize: '10px',
                 fontWeight: 600,
                 color: 'var(--text-muted)',
                 letterSpacing: '0.02em',
+                whiteSpace: 'nowrap',
               }}
               title="Confidence represents heuristic rule agreement, not calibrated Bayesian posterior probability."
             >

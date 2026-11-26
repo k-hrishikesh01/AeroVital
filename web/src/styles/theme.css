@@ -104,9 +104,9 @@
   color-scheme: light;
 }
 
-/* Dark Mode: Monochrome Charcoal Cockpit HUD Surfaces */
+/* Dark Mode: Monochrome Charcoal Cockpit HUD Surfaces (only when not explicitly forced to light) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg-app: #090A0C;
     --bg-secondary: #121316;
     --bg-card: #121316;

@@ -66,17 +66,17 @@ export function RunComparisonModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-container research-comparison-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="modal-backdrop active comparison-modal-backdrop" onClick={onClose}>
+      <div className="comparison-modal-container research-comparison-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-research">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="research-badge-accent">RUN COMPARISON</span>
             <h3>Compare Research Pipeline Runs</h3>
           </div>
-          <button className="btn-icon close-btn" onClick={onClose}>&times;</button>
+          <button type="button" className="btn-icon close-btn" onClick={onClose} aria-label="Close modal">&times;</button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body-research">
           {/* Run selection picker */}
           <div className="comparison-picker-bar">
             <span style={{ fontSize: '12px', fontWeight: 600 }}>Select Runs to Compare (2 to 4):</span>
@@ -192,8 +192,8 @@ export function RunComparisonModal({
           )}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose}>
+        <div className="modal-footer-research">
+          <button type="button" className="btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>

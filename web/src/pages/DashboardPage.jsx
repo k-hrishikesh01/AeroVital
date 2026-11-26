@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useDashboardData from '../hooks/useDashboardData';
+import { useTheme } from '../context/ThemeContext';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
 import CurrentSessionCard from '../components/CurrentSessionCard';
@@ -38,37 +39,30 @@ export function DashboardPage({
     refetch,
   } = useDashboardData();
 
-  const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('aerovital_theme') || 'dark');
+  const { resolvedTheme, toggleTheme } = useTheme();
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const activeTheme = propTheme || localTheme;
+  const activeTheme = propTheme || resolvedTheme;
 
-  // Apply theme to body
-  useEffect(() => {
-    if (activeTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
-    }
-    localStorage.setItem('aerovital_theme', activeTheme);
-  }, [activeTheme]);
-
-  // Apply mobile preview mode to body
+  // Apply mobile preview mode to body and clean up on unmount
   useEffect(() => {
     if (isMobilePreview) {
       document.body.classList.add('mobile-view-mode');
     } else {
       document.body.classList.remove('mobile-view-mode');
     }
+    return () => {
+      document.body.classList.remove('mobile-view-mode');
+    };
   }, [isMobilePreview]);
 
   const handleToggleTheme = () => {
     if (propToggleTheme) {
       propToggleTheme();
     } else {
-      setLocalTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+      toggleTheme();
     }
   };
 

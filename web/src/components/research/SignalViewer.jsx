@@ -140,7 +140,7 @@ export function SignalViewer({
             {activeTab === 'heart_rate' ? (
               <ComposedChart
                 data={chartData}
-                margin={{ top: 10, right: 15, left: -10, bottom: 0 }}
+                margin={{ top: 10, right: 16, left: 6, bottom: 0 }}
                 onClick={(e) => {
                   if (e?.activePayload?.[0]?.payload?.timestamp && onSelectTimestamp) {
                     onSelectTimestamp(e.activePayload[0].payload.timestamp);
@@ -225,7 +225,7 @@ export function SignalViewer({
             ) : activeTab === 'rr_interval' ? (
               <ComposedChart
                 data={chartData}
-                margin={{ top: 10, right: 15, left: -10, bottom: 0 }}
+                margin={{ top: 10, right: 16, left: 6, bottom: 0 }}
                 onClick={(e) => {
                   if (e?.activePayload?.[0]?.payload?.timestamp && onSelectTimestamp) {
                     onSelectTimestamp(e.activePayload[0].payload.timestamp);
@@ -269,7 +269,7 @@ export function SignalViewer({
             ) : (
               <ComposedChart
                 data={chartData}
-                margin={{ top: 10, right: 15, left: -10, bottom: 0 }}
+                margin={{ top: 10, right: 16, left: 6, bottom: 0 }}
                 onClick={(e) => {
                   if (e?.activePayload?.[0]?.payload?.timestamp && onSelectTimestamp) {
                     onSelectTimestamp(e.activePayload[0].payload.timestamp);
