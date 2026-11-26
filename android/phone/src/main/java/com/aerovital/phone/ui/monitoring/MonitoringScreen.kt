@@ -31,6 +31,7 @@ fun MonitoringScreen(
     username: String? = null,
     pilot: PilotProfile?,
     latestHeartRate: Double? = null,
+    heartRateHistory: List<Double> = emptyList(),
     accelX: Float? = 0.02f,
     accelY: Float? = 0.98f,
     accelZ: Float? = 0.15f,
@@ -83,8 +84,8 @@ fun MonitoringScreen(
                         )
                     }
                     SemanticStatusBadge(
-                        label = "STREAMING",
-                        statusColor = AeroGreen
+                        label = if (latestHeartRate != null) "STREAMING" else "AWAITING STREAM",
+                        statusColor = if (latestHeartRate != null) AeroGreen else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -97,7 +98,7 @@ fun MonitoringScreen(
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = latestHeartRate?.let { String.format(Locale.US, "%.0f", it) } ?: "72",
+                            text = latestHeartRate?.let { String.format(Locale.US, "%.0f", it) } ?: "--",
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 48.sp,
@@ -126,6 +127,21 @@ fun MonitoringScreen(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Real-time Heart Rate Timeseries Canvas Chart
+                val chartPoints = if (heartRateHistory.isNotEmpty()) {
+                    heartRateHistory
+                } else if (latestHeartRate != null) {
+                    listOf(latestHeartRate)
+                } else {
+                    emptyList()
+                }
+                HeartRateTimeseriesChart(
+                    heartRates = chartPoints,
+                    lineColor = if (latestHeartRate != null) AeroSemanticGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             // 2. 3-Axis Accelerometer & Motion Telemetry Card

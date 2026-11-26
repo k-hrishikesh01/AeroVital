@@ -1,6 +1,7 @@
 package com.aerovital.phone.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,13 +10,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -391,6 +398,180 @@ fun HardwareNonFabricationDisclaimer(
                     fontSize = 10.sp,
                     lineHeight = 14.sp
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Real-time physiological Heart Rate timeseries line chart with technical gridlines,
+ * BPM axes, and live tracking point.
+ */
+@Composable
+fun HeartRateTimeseriesChart(
+    heartRates: List<Double>,
+    modifier: Modifier = Modifier,
+    minY: Float = 50f,
+    maxY: Float = 130f,
+    lineColor: Color = AeroSemanticGreen
+) {
+    val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val surfaceColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(surfaceColor)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        if (heartRates.isEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "AWAITING REAL-TIME HR TELEMETRY STREAM",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    letterSpacing = 0.5.sp
+                )
+                Text(
+                    text = "Wearable acquisition stream nominal · 1 Hz cadence",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 9.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        } else {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val width = size.width
+                val height = size.height
+                val paddingBottom = 16f
+                val chartHeight = height - paddingBottom
+                val chartWidth = width - 40f
+
+                val gridBpmValues = listOf(60f, 80f, 100f, 120f)
+                gridBpmValues.forEach { bpm ->
+                    val normY = 1f - (bpm - minY) / (maxY - minY)
+                    val y = normY * chartHeight
+                    if (y in 0f..chartHeight) {
+                        drawLine(
+                            color = gridColor,
+                            start = Offset(0f, y),
+                            end = Offset(chartWidth, y),
+                            strokeWidth = 1f
+                        )
+                    }
+                }
+
+                val points = if (heartRates.size == 1) {
+                    listOf(heartRates[0], heartRates[0])
+                } else {
+                    heartRates.takeLast(30)
+                }
+
+                val path = Path()
+                val areaPath = Path()
+
+                points.forEachIndexed { i, hrVal ->
+                    val clampedVal = hrVal.toFloat().coerceIn(minY, maxY)
+                    val x = (i.toFloat() / (points.size - 1).coerceAtLeast(1)) * chartWidth
+                    val normY = 1f - (clampedVal - minY) / (maxY - minY)
+                    val y = (normY * chartHeight).coerceIn(0f, chartHeight)
+
+                    if (i == 0) {
+                        path.moveTo(x, y)
+                        areaPath.moveTo(x, chartHeight)
+                        areaPath.lineTo(x, y)
+                    } else {
+                        path.lineTo(x, y)
+                        areaPath.lineTo(x, y)
+                    }
+                }
+
+                areaPath.lineTo(chartWidth, chartHeight)
+                areaPath.close()
+
+                drawPath(
+                    path = areaPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(lineColor.copy(alpha = 0.25f), Color.Transparent),
+                        startY = 0f,
+                        endY = chartHeight
+                    )
+                )
+
+                drawPath(
+                    path = path,
+                    color = lineColor,
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                val lastVal = points.last().toFloat().coerceIn(minY, maxY)
+                val lastX = chartWidth
+                val lastY = (1f - (lastVal - minY) / (maxY - minY)) * chartHeight
+                drawCircle(
+                    color = lineColor,
+                    radius = 4.dp.toPx(),
+                    center = Offset(lastX, lastY)
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 2.dp.toPx(),
+                    center = Offset(lastX, lastY)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    text = "-30s",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 9.sp,
+                    color = labelColor
+                )
+                Text(
+                    text = "-15s",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 9.sp,
+                    color = labelColor
+                )
+                Text(
+                    text = "NOW (LIVE)",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 9.sp,
+                    color = lineColor
+                )
+                Column(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(text = "120", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp, color = labelColor)
+                    Text(text = "100", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp, color = labelColor)
+                    Text(text = "80", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp, color = labelColor)
+                    Text(text = "60", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp, color = labelColor)
+                }
             }
         }
     }

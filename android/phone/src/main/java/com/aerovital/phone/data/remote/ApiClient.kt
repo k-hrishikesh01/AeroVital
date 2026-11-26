@@ -41,7 +41,11 @@ object ApiClient {
                     val request = chain.request()
                     val response = chain.proceed(request)
                     if (response.code == 401) {
-                        onUnauthorized()
+                        val path = request.url.encodedPath
+                        val hasAuth = request.header("Authorization") != null
+                        if (hasAuth && !path.contains("auth/token")) {
+                            onUnauthorized()
+                        }
                     }
                     response
                 }

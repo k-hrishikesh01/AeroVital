@@ -7,12 +7,15 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -90,8 +93,21 @@ class MainActivity : ComponentActivity() {
                     )
 
                     val authState by authViewModel.authState.collectAsStateWithLifecycle()
+                    LaunchedEffect(authState) {
+                        if (authState is AuthState.Authenticated) {
+                            telemetryRepository.startPolling()
+                        } else {
+                            telemetryRepository.stopPolling()
+                        }
+                    }
                     val latestTelemetryDto by telemetryRepository.latestTelemetry.collectAsStateWithLifecycle()
+                    val telemetryHistory by telemetryRepository.telemetryHistory.collectAsStateWithLifecycle()
                     val latestHeartRate = latestTelemetryDto?.heartRate
+
+                    val ingestionHandler = remember { WearTransportReceiver.getOrInitHandler(applicationContext) }
+                    val transportDiagnostic by WearTransportReceiver.diagnosticState.collectAsStateWithLifecycle()
+                    val pendingQueueCount = ingestionHandler.queue.countPending()
+                    val totalObsReceived = transportDiagnostic.totalReceivedEnvelopes
 
                     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.OVERVIEW) }
                     var isAcquisitionRunning by rememberSaveable { mutableStateOf(false) }
@@ -143,78 +159,86 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) { innerPadding ->
-                                when (currentScreen) {
-                                    AppScreen.OVERVIEW, AppScreen.DASHBOARD -> {
-                                        OverviewScreen(
-                                            username = auth.username,
-                                            pilot = auth.pilot,
-                                            latestHeartRate = latestHeartRate,
-                                            watchConnected = true,
-                                            isAcquisitionRunning = isAcquisitionRunning,
-                                            pendingQueueCount = 0,
-                                            onNavigate = { destination -> currentScreen = destination },
-                                            onToggleAcquisition = { isAcquisitionRunning = !isAcquisitionRunning }
-                                        )
-                                    }
-                                    AppScreen.MONITORING, AppScreen.DETAILS -> {
-                                        MonitoringScreen(
-                                            username = auth.username,
-                                            pilot = auth.pilot,
-                                            latestHeartRate = latestHeartRate,
-                                            accelX = 0.02f,
-                                            accelY = 0.98f,
-                                            accelZ = 0.15f,
-                                            onNavigateBack = { currentScreen = AppScreen.OVERVIEW }
-                                        )
-                                    }
-                                    AppScreen.DEVICES -> {
-                                        DevicesScreen(
-                                            watchConnected = true,
-                                            isAcquisitionRunning = isAcquisitionRunning,
-                                            watchBatteryLevel = 84,
-                                            totalObservationsReceived = 2450L,
-                                            onToggleAcquisition = { isAcquisitionRunning = !isAcquisitionRunning }
-                                        )
-                                    }
-                                    AppScreen.HISTORY -> {
-                                        HistoryScreen(
-                                            pilotCode = auth.pilot?.pilotCode ?: "PL-01",
-                                            telemetryRepository = telemetryRepository,
-                                            onBack = { currentScreen = AppScreen.OVERVIEW }
-                                        )
-                                    }
-                                    AppScreen.SETTINGS, AppScreen.PROFILE -> {
-                                        SettingsScreen(
-                                            username = auth.username,
-                                            pilot = auth.pilot,
-                                            currentThemeMode = currentThemeMode,
-                                            onThemeModeChanged = { mode ->
-                                                currentThemeMode = mode
-                                                ThemePreferences.setThemeMode(context, mode)
-                                            },
-                                            isDarkMode = effectiveDark,
-                                            onDarkModeChanged = { enabled ->
-                                                currentThemeMode = if (enabled) ThemeMode.DARK else ThemeMode.LIGHT
-                                                ThemePreferences.setThemeMode(context, currentThemeMode)
-                                            },
-                                            onBack = { currentScreen = AppScreen.OVERVIEW },
-                                            onDiagnosticsClick = { currentScreen = AppScreen.DIAGNOSTICS },
-                                            onLogoutClick = {
-                                                authViewModel.logout()
-                                                currentScreen = AppScreen.OVERVIEW
-                                            }
-                                        )
-                                    }
-                                    AppScreen.DIAGNOSTICS -> {
-                                        PhoneDiagnosticScreen(
-                                            username = auth.username,
-                                            pilot = auth.pilot,
-                                            onLogout = {
-                                                authViewModel.logout()
-                                                currentScreen = AppScreen.OVERVIEW
-                                            },
-                                            onBack = { currentScreen = AppScreen.OVERVIEW }
-                                        )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding)
+                                ) {
+                                    when (currentScreen) {
+                                        AppScreen.OVERVIEW, AppScreen.DASHBOARD -> {
+                                            OverviewScreen(
+                                                username = auth.username,
+                                                pilot = auth.pilot,
+                                                latestHeartRate = latestHeartRate,
+                                                watchConnected = totalObsReceived > 0 || isAcquisitionRunning,
+                                                isAcquisitionRunning = isAcquisitionRunning,
+                                                pendingQueueCount = pendingQueueCount,
+                                                onNavigate = { destination -> currentScreen = destination },
+                                                onToggleAcquisition = { isAcquisitionRunning = !isAcquisitionRunning }
+                                            )
+                                        }
+                                        AppScreen.MONITORING, AppScreen.DETAILS -> {
+                                            MonitoringScreen(
+                                                username = auth.username,
+                                                pilot = auth.pilot,
+                                                latestHeartRate = latestHeartRate,
+                                                heartRateHistory = telemetryHistory.mapNotNull { it.heartRate },
+                                                accelX = 0.02f,
+                                                accelY = 0.98f,
+                                                accelZ = 0.15f,
+                                                overallSqi = 0.94f,
+                                                onNavigateBack = { currentScreen = AppScreen.OVERVIEW }
+                                            )
+                                        }
+                                        AppScreen.DEVICES -> {
+                                            DevicesScreen(
+                                                watchConnected = totalObsReceived > 0 || isAcquisitionRunning,
+                                                isAcquisitionRunning = isAcquisitionRunning,
+                                                watchBatteryLevel = null,
+                                                totalObservationsReceived = totalObsReceived,
+                                                onToggleAcquisition = { isAcquisitionRunning = !isAcquisitionRunning }
+                                            )
+                                        }
+                                        AppScreen.HISTORY -> {
+                                            HistoryScreen(
+                                                pilotCode = auth.pilot?.pilotCode ?: "PL-01",
+                                                telemetryRepository = telemetryRepository,
+                                                onBack = { currentScreen = AppScreen.OVERVIEW }
+                                            )
+                                        }
+                                        AppScreen.SETTINGS, AppScreen.PROFILE -> {
+                                            SettingsScreen(
+                                                username = auth.username,
+                                                pilot = auth.pilot,
+                                                currentThemeMode = currentThemeMode,
+                                                onThemeModeChanged = { mode ->
+                                                    currentThemeMode = mode
+                                                    ThemePreferences.setThemeMode(context, mode)
+                                                },
+                                                isDarkMode = effectiveDark,
+                                                onDarkModeChanged = { enabled ->
+                                                    currentThemeMode = if (enabled) ThemeMode.DARK else ThemeMode.LIGHT
+                                                    ThemePreferences.setThemeMode(context, currentThemeMode)
+                                                },
+                                                onBack = { currentScreen = AppScreen.OVERVIEW },
+                                                onDiagnosticsClick = { currentScreen = AppScreen.DIAGNOSTICS },
+                                                onLogoutClick = {
+                                                    authViewModel.logout()
+                                                    currentScreen = AppScreen.OVERVIEW
+                                                }
+                                            )
+                                        }
+                                        AppScreen.DIAGNOSTICS -> {
+                                            PhoneDiagnosticScreen(
+                                                username = auth.username,
+                                                pilot = auth.pilot,
+                                                onLogout = {
+                                                    authViewModel.logout()
+                                                    currentScreen = AppScreen.OVERVIEW
+                                                },
+                                                onBack = { currentScreen = AppScreen.OVERVIEW }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -235,7 +259,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::telemetryRepository.isInitialized) {
+        if (::telemetryRepository.isInitialized && ::authRepository.isInitialized && authRepository.authState.value is AuthState.Authenticated) {
             telemetryRepository.startPolling()
         }
     }
