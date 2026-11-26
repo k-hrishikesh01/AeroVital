@@ -366,7 +366,8 @@ DJANGO_SECRET_KEY="aerovital-local-development-secret-key-do-not-use-in-producti
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,0.0.0.0"
 DJANGO_USE_SQLITE=True
-DEMO_RESEARCHER_PASSWORD="AeroVital2026!"
+# Set a strong, unique password for the local demo researcher account
+DEMO_RESEARCHER_PASSWORD="<your-demo-password>"
 ```
 
 ---
@@ -379,7 +380,7 @@ cd django-backend
 source ../.venv/bin/activate
 export DJANGO_SETTINGS_MODULE=config.settings
 export DJANGO_USE_SQLITE=1
-export DEMO_RESEARCHER_PASSWORD="AeroVital2026!"
+export DEMO_RESEARCHER_PASSWORD="<your-demo-password>"
 
 python manage.py migrate
 cd ..
@@ -449,7 +450,7 @@ cd django-backend
 source ../.venv/bin/activate
 export DJANGO_SETTINGS_MODULE=config.settings
 export DJANGO_USE_SQLITE=1
-export DEMO_RESEARCHER_PASSWORD="AeroVital2026!"
+export DEMO_RESEARCHER_PASSWORD="<your-demo-password>"
 python manage.py test
 cd ..
 
